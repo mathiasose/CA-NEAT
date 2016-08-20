@@ -1,12 +1,14 @@
 import logging
 import os
+from random import random
 
 from celery.app import shared_task
 from sqlalchemy.sql.functions import now
 
 from add_dill import add_dill
 from database import Db, Individual, Scenario
-from utils import random_bitstring
+from selection import fitness_proportionate
+from utils import mutate, random_bitstring, splice
 
 add_dill()
 
@@ -43,22 +45,25 @@ def initialize_generation(genotypes, **kwargs):
 
 
 @shared_task(name='finalize_generation', bind=True)
-def finalize_generation(self, scenario_id, generation, selection_f, crossover_f, mutation_f, **kwargs):
-    target_count = DB.get_scenario(scenario_id).population_size
-    individuals = DB.get_generation(scenario_id, generation)
+def finalize_generation(self, scenario_id, generation, selection_f, crossover_f, mutation_f, mutation_chance, **kwargs):
+    scenario = DB.get_scenario(scenario_id)
+    population_size_target = scenario.population_size
+    population = DB.get_generation(scenario_id, generation)
 
     try:
-        assert individuals.count() == target_count
+        assert population.count() == population_size_target
     except AssertionError:
         raise self.retry(countdown=5)
 
     next_gen = generation + 1
 
-    if next_gen == target_count:
-        logging.info('Scenario {} finished after {} generations'.format(scenario_id, target_count))
+    if next_gen == scenario.generations:
+        logging.info('Scenario {} finished after {} generations'.format(scenario_id, scenario.generations))
         return
 
-    new_genotypes = [x.genotype for x in individuals]  # TODO: use selection_f and crossover_f
+    pairs = selection_f(population=population, n_pairs=population_size_target)
+    new_genotypes = tuple(crossover_f(a.genotype, b.genotype) for (a, b) in pairs)
+    new_genotypes = tuple(mutation_f(x) if random() < mutation_chance else x for x in new_genotypes)
 
     initialize_generation(
         scenario_id=scenario_id,
@@ -73,8 +78,11 @@ def finalize_generation(self, scenario_id, generation, selection_f, crossover_f,
         selection_f=selection_f,
         crossover_f=crossover_f,
         mutation_f=mutation_f,
+        mutation_chance=mutation_chance,
         **kwargs
     )
+
+    logging.info('Finished generation {} of scenario {}'.format(generation, scenario_id))
 
 
 @shared_task(name='handle_individual')
@@ -93,30 +101,28 @@ def handle_individual(scenario_id, generation, individual_number, genotype, geno
 
     DB.save_individual(individual)
 
-    return individual
-
 
 if __name__ == '__main__':
     DESCRIPTION = 'asfdsadsfasfa'
     POPULATION_SIZE = 10
     INITIAL_GENOTYPES = tuple(random_bitstring(16) for _ in range(POPULATION_SIZE))
-    GENERATIONS = 10
+    GENERATIONS = 100
     MUTATION_CHANCE = 0.1
     GENO_TO_PHENO_F = lambda x: x
     FITNESS_F = lambda bitstr: sum(c == '1' for c in bitstr)
-    SELECTION_F = None  # TODO
-    CROSSOVER_F = None  # TODO
-    MUTATION_F = None  # TODO
+    SELECTION_F = fitness_proportionate
+    CROSSOVER_F = splice
+    MUTATION_F = mutate
 
     initialize_scenario(
         initial_genotypes=INITIAL_GENOTYPES,
         description=DESCRIPTION,
         population_size=POPULATION_SIZE,
         generations=GENERATIONS,
-        mutation_chance=MUTATION_CHANCE,
         geno_to_pheno_f=GENO_TO_PHENO_F,
         fitness_f=FITNESS_F,
         selection_f=SELECTION_F,
         crossover_f=CROSSOVER_F,
         mutation_f=MUTATION_F,
+        mutation_chance=MUTATION_CHANCE,
     )
