@@ -2,7 +2,7 @@ from operator import attrgetter
 from random import random
 
 
-def roulette(population, scaling_func, n_pairs, **kwargs):
+def roulette(population, scaling_func, **kwargs):
     """
     generates pairs with the roulette method.
     requires a scaling_func to scale the "slices"
@@ -38,11 +38,10 @@ def roulette(population, scaling_func, n_pairs, **kwargs):
         return get_one
 
     spin = generate_roulette()
-    pairs = list()
 
     individuals_by_number = {x.individual_number: x for x in population}
 
-    while len(pairs) < n_pairs:
+    while True:
         a = b = spin()
 
         while a == b:
@@ -51,9 +50,7 @@ def roulette(population, scaling_func, n_pairs, **kwargs):
         if random() < 0.5:
             a, b = b, a
 
-        pairs.append((individuals_by_number.get(a), individuals_by_number.get(b)))
-
-    return pairs
+        yield (individuals_by_number.get(a), individuals_by_number.get(b))
 
 
 def fitness_proportionate(population, **kwargs):
@@ -71,12 +68,6 @@ def sigma_scaled(sigma, average_fitness, population, **kwargs):
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def stochastic_uniform(**kwargs):
-    scaling_func = lambda x: 1
-
-    return roulette(scaling_func=scaling_func, **kwargs)
-
-
 def ranked(population, **kwargs):
     min_f = min(population, key=attrgetter('fitness'))
     max_f = max(population, key=attrgetter('fitness'))
@@ -86,7 +77,7 @@ def ranked(population, **kwargs):
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def tournament(population, group_size, epsilon, n_pairs, **kwargs):
+def tournament(population, group_size, epsilon, **kwargs):
     def get_one(group):
         r = random.random()
 
@@ -95,9 +86,7 @@ def tournament(population, group_size, epsilon, n_pairs, **kwargs):
 
         return max(group, key=attrgetter('fitness'))
 
-    pairs = list()
-
-    while len(pairs) < n_pairs:
+    while True:
         pool = list(population)
 
         group_a = random.sample(pool, group_size)
@@ -107,9 +96,7 @@ def tournament(population, group_size, epsilon, n_pairs, **kwargs):
         group_b = random.sample(pool, group_size)
         b = get_one(group_b)
 
-        pairs.append((a, b))
-
-    return pairs
+        yield (a, b)
 
 
 def eugenics(population, **kwargs):
@@ -126,6 +113,4 @@ def eugenics(population, **kwargs):
         a = s.pop(0)
         b = s.pop(0)
 
-        pairs.append((a, b))
-
-    return pairs
+        yield (a, b)

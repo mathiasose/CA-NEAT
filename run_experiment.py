@@ -66,9 +66,18 @@ def finalize_generation(self, db_path, scenario_id, generation, selection_f, cro
         logging.info('Scenario {} finished after {} generations'.format(scenario_id, scenario.generations))
         return
 
-    pairs = selection_f(population=population, n_pairs=population_size_target)
-    new_genotypes = tuple(crossover_f(a.genotype, b.genotype) for (a, b) in pairs)
-    new_genotypes = tuple(mutation_f(x) if random() < mutation_chance else x for x in new_genotypes)
+    new_genotypes = []
+    pair_generator = selection_f(population=population)
+    while len(new_genotypes) < population_size_target:
+        a, b = next(pair_generator)
+        genotype = crossover_f(a=a.genotype, b=b.genotype)
+
+        if random() < mutation_chance:
+            genotype = mutation_f(genotype=genotype)
+
+        assert len(genotype) == len(a.genotype)
+
+        new_genotypes.append(genotype)
 
     initialize_generation(
         db_path=db_path,
