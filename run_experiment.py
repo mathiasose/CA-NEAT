@@ -48,7 +48,7 @@ def initialize_generation(genotypes, **kwargs):
 
 
 @shared_task(name='finalize_generation', bind=True)
-def finalize_generation(self, db_path, scenario_id, generation, selection_f, crossover_f, mutation_f, mutation_chance,
+def finalize_generation(task, db_path, scenario_id, generation, selection_f, crossover_f, mutation_f, mutation_chance,
                         **kwargs):
     db = get_db(db_path)
     scenario = db.get_scenario(scenario_id)
@@ -58,7 +58,7 @@ def finalize_generation(self, db_path, scenario_id, generation, selection_f, cro
     try:
         assert population.count() == population_size_target
     except AssertionError:
-        raise self.retry(countdown=5)
+        raise task.retry(countdown=5)
 
     next_gen = generation + 1
 
@@ -104,8 +104,8 @@ def finalize_generation(self, db_path, scenario_id, generation, selection_f, cro
 @shared_task(name='handle_individual')
 def handle_individual(db_path, scenario_id, generation, individual_number, genotype, geno_to_pheno_f, fitness_f,
                       **kwargs):
-    phenotype = geno_to_pheno_f(genotype)
-    fitness = fitness_f(phenotype)
+    phenotype = geno_to_pheno_f(genotype=genotype)
+    fitness = fitness_f(phenotype=phenotype)
 
     individual = Individual(
         scenario_id=scenario_id,
@@ -118,13 +118,15 @@ def handle_individual(db_path, scenario_id, generation, individual_number, genot
 
     get_db(db_path).save_individual(individual)
 
+    return individual.genotype
+
 
 if __name__ == '__main__':
     POPULATION_SIZE = 10
     INITIAL_GENOTYPES = tuple(random_bitstring(16) for _ in range(POPULATION_SIZE))
     MUTATION_CHANCE = 0.1
-    GENO_TO_PHENO_F = lambda x: x
-    FITNESS_F = lambda bitstr: sum(c == '1' for c in bitstr)
+    GENO_TO_PHENO_F = lambda genotype: genotype
+    FITNESS_F = lambda phenotype: sum(c == '1' for c in phenotype)
     SELECTION_F = fitness_proportionate
     CROSSOVER_F = splice
     MUTATION_F = mutate
