@@ -9,10 +9,17 @@ class CellGrid(defaultdict):
     dimensionality = None
     neighbourhood = None
 
-    def __init__(self, cell_states):
+    def __init__(self, cell_states, values=None, neighbourhood=None):
         self.cell_states = cell_states
         self.dead_cell = cell_states[0]
         super().__init__()
+
+        if values:
+            for key, value in values:
+                self.set(key, value)
+
+        if neighbourhood:
+            self.neighbourhood = neighbourhood
 
     def get(self, coord, default=None):
         assert len(coord) == self.dimensionality
@@ -43,6 +50,9 @@ class CellGrid(defaultdict):
         raise NotImplementedError
 
     def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+
         for a, b in zip(self.iterate_coords(), other.iterate_coords()):
             if self.get(a) != other.get(b):
                 return False

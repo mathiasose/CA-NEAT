@@ -1,53 +1,59 @@
 import os
 from datetime import datetime
 
-from geometry.cell_grid import CellGrid1D
+from geometry.neighbourhoods import VON_NEUMANN
 from run_experiment import initialize_scenario
 from selection import fitness_proportionate
-from utils import random_string, splice, char_set
+from utils import char_set, random_string, splice
 
 
-def fitness(phenotype):
-    from utils import char_set
+def fitness(phenotype, **kwargs):
     from geometry.cell_grid import CellGrid1D
-    INITIAL = CellGrid1D(cell_states=char_set(6))
-    for x in range(5):
-        INITIAL.set((x,), 'B')
+    from ca.iterate import iterate_until_stable
 
-    TARGET = CellGrid1D(cell_states=char_set(6))
-    for x in range(25):
-        TARGET.set((x,), char_set(6)[-1])
+    neighbourhood = kwargs.get('neighbourhood')
+    alphabet = kwargs.get('alphabet')
+
+    initial = CellGrid1D(
+        cell_states=alphabet,
+        neighbourhood=neighbourhood,
+        values=(((x,), 'B') for x in range(5))
+    )
+    target = CellGrid1D(
+        cell_states=alphabet,
+        neighbourhood=neighbourhood,
+        values=(((x,), alphabet[-1]) for x in range(25))
+    )
 
     transition_f = lambda k: phenotype[tuple(k)]
+    grid = iterate_until_stable(initial_grid=initial, transition_f=transition_f, max_n=100)
 
-    from ca.iterate import iterate_until_stable
-    grid = iterate_until_stable(initial_grid=INITIAL, transition_f=transition_f, max_n=100)
-
+    # TODO make proper calculation
     score = 0.0
-    for a, b in zip(grid.iterate_coords(), TARGET.iterate_coords()):
-        if grid.get(a) == TARGET.get(b):
+    for a, b in zip(grid.iterate_coords(), target.iterate_coords()):
+        if grid.get(a) == target.get(b):
             score += 1.0 / 27
 
     return score
 
 
-def geno_to_pheno_f(genotype):
+def geno_to_pheno_f(genotype, **kwargs):
     from ca.rule_tables import table_from_string
-    from utils import char_set
-    return table_from_string(genotype, char_set(6))
+    return table_from_string(genotype, kwargs.get('alphabet'))
 
 
-def mutation_f(genotype):
-    from utils import char_set, mutate_char
-    return mutate_char(genotype, char_set(6))
+def mutation_f(genotype, **kwargs):
+    from utils import mutate_char
+    return mutate_char(genotype, kwargs.get('alphabet'))
 
 
 if __name__ == '__main__':
-    grid = CellGrid1D(cell_states=(char_set(6)))
+    ALPHABET = char_set(6)
     POPULATION_SIZE = 10
-    N_GENERATIONS = 100
+    N_GENERATIONS = 10
+    NEIGHBOURHOOD = VON_NEUMANN
     INITIAL_GENOTYPES = tuple(
-        random_string(char_set(6), len(char_set(6)) ** len(grid.neighbourhood)) for _ in range(POPULATION_SIZE)
+        random_string(ALPHABET, len(ALPHABET) ** len(NEIGHBOURHOOD)) for _ in range(POPULATION_SIZE)
     )
     MUTATION_CHANCE = 0.01
     GENO_TO_PHENO_F = geno_to_pheno_f
@@ -59,10 +65,10 @@ if __name__ == '__main__':
     DB_DIR = 'db/'
     DB_PATH = os.path.join('sqlite:///', DB_DIR, '{}.db'.format(datetime.now()))
 
-    description = '"Square 5", population size: {}, generations: {}'.format(POPULATION_SIZE, N_GENERATIONS)
+    DESCRIPTION = '"Square 5", population size: {}, generations: {}'.format(POPULATION_SIZE, N_GENERATIONS)
     initialize_scenario(
         db_path=DB_PATH,
-        description=description,
+        description=DESCRIPTION,
         initial_genotypes=INITIAL_GENOTYPES,
         population_size=POPULATION_SIZE,
         generations=N_GENERATIONS,
@@ -72,4 +78,6 @@ if __name__ == '__main__':
         crossover_f=CROSSOVER_F,
         mutation_f=MUTATION_F,
         mutation_chance=MUTATION_CHANCE,
+        alphabet=ALPHABET,
+        neighbourhood=NEIGHBOURHOOD,
     )

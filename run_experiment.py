@@ -63,13 +63,13 @@ def finalize_generation(task, db_path, scenario_id, generation, selection_f, cro
         return
 
     new_genotypes = []
-    pair_generator = selection_f(population=population)
+    pair_generator = selection_f(population=population, **kwargs)
     while len(new_genotypes) < population_size_target:
         a, b = next(pair_generator)
-        genotype = crossover_f(a=a.genotype, b=b.genotype)
+        genotype = crossover_f(a=a.genotype, b=b.genotype, **kwargs)
 
         if random() < mutation_chance:
-            genotype = mutation_f(genotype=genotype)
+            genotype = mutation_f(genotype=genotype, **kwargs)
 
         assert len(genotype) == len(a.genotype)
 
@@ -100,8 +100,8 @@ def finalize_generation(task, db_path, scenario_id, generation, selection_f, cro
 @shared_task(name='handle_individual')
 def handle_individual(db_path, scenario_id, generation, individual_number, genotype, geno_to_pheno_f, fitness_f,
                       **kwargs):
-    phenotype = geno_to_pheno_f(genotype=genotype)
-    fitness = fitness_f(phenotype=phenotype)
+    phenotype = geno_to_pheno_f(genotype=genotype, **kwargs)
+    fitness = fitness_f(phenotype=phenotype, **kwargs)
 
     individual = Individual(
         scenario_id=scenario_id,

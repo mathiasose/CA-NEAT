@@ -3,14 +3,14 @@ from datetime import datetime
 
 from run_experiment import initialize_scenario
 from selection import fitness_proportionate
-from utils import random_bitstring, splice, mutate_bit
+from utils import mutate_bit, random_bitstring, splice
 
 if __name__ == '__main__':
     POPULATION_SIZE = 10
     INITIAL_GENOTYPES = tuple(random_bitstring(16) for _ in range(POPULATION_SIZE))
     MUTATION_CHANCE = 0.1
-    GENO_TO_PHENO_F = lambda genotype: genotype
-    FITNESS_F = lambda phenotype: sum(c == '1' for c in phenotype)
+    GENO_TO_PHENO_F = lambda genotype, **kwargs: genotype
+    FITNESS_F = lambda phenotype, **kwargs: sum(c == '1' for c in phenotype)
     SELECTION_F = fitness_proportionate
     CROSSOVER_F = splice
     MUTATION_F = mutate_bit
