@@ -3,7 +3,7 @@ from datetime import datetime
 
 from run_experiment import initialize_scenario
 from selection import fitness_proportionate
-from utils import random_bitstring, splice, mutate
+from utils import random_bitstring, splice, mutate_bit
 
 if __name__ == '__main__':
     POPULATION_SIZE = 10
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     FITNESS_F = lambda phenotype: sum(c == '1' for c in phenotype)
     SELECTION_F = fitness_proportionate
     CROSSOVER_F = splice
-    MUTATION_F = mutate
+    MUTATION_F = mutate_bit
 
     DB_DIR = 'db/'
     DB_PATH = os.path.join('sqlite:///', DB_DIR, '{}.db'.format(datetime.now()))

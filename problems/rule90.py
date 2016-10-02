@@ -3,7 +3,7 @@ from datetime import datetime
 
 from run_experiment import initialize_scenario
 from selection import fitness_proportionate
-from utils import mutate, random_bitstring, splice
+from utils import mutate_bit, random_bitstring, splice
 
 
 def geno_to_pheno(genotype):
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     FITNESS_F = fitness
     SELECTION_F = fitness_proportionate
     CROSSOVER_F = splice
-    MUTATION_F = mutate
+    MUTATION_F = mutate_bit
 
     DB_DIR = 'db/'
     DB_PATH = os.path.join('sqlite:///', DB_DIR, '{}.db'.format(datetime.now()))

@@ -1,6 +1,4 @@
 import logging
-import os
-from datetime import datetime
 from random import random
 
 from celery.app import shared_task
@@ -8,8 +6,6 @@ from sqlalchemy.sql.functions import now
 
 from add_dill import add_dill
 from database import Db, Individual, Scenario
-from selection import fitness_proportionate
-from utils import mutate, random_bitstring, splice
 
 add_dill()
 
