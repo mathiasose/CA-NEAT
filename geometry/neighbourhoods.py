@@ -1,3 +1,6 @@
+from operator import itemgetter
+
+
 def manhattan_distance(a, b):
     xa, ya = a
     xb, yb = b
@@ -10,6 +13,22 @@ def chebyshev_distance(a, b):
     xb, yb = b
 
     return max(abs(xa - xb), abs(ya - yb))
+
+
+def radius_1d(neighbourhood):
+    return max(
+        abs(max(neighbourhood, key=itemgetter(0))[0]),
+        abs(min(neighbourhood, key=itemgetter(0))[0]),
+    )
+
+
+def radius_2d(neighbourhood):
+    return max(
+        abs(max(neighbourhood, key=itemgetter(0))[0]),
+        abs(min(neighbourhood, key=itemgetter(0))[0]),
+        abs(max(neighbourhood, key=itemgetter(1))[1]),
+        abs(min(neighbourhood, key=itemgetter(1))[1]),
+    )
 
 
 LCR = ((-1,), (0,), (1,))

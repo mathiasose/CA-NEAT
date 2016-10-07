@@ -61,10 +61,16 @@ class Db:
 
         return session.query(Scenario).get(scenario_id)
 
-    def get_generation(self, scenario_id, generation, session=None):
+    def get_individuals(self, scenario_id, session=None):
         if session is None:
             session = self.Session()
 
         return session.query(Individual) \
-            .filter(Individual.scenario_id == scenario_id) \
+            .filter(Individual.scenario_id == scenario_id)
+
+    def get_generation(self, scenario_id, generation, session=None):
+        if session is None:
+            session = self.Session()
+
+        return self.get_individuals(scenario_id, session) \
             .filter(Individual.generation == generation)

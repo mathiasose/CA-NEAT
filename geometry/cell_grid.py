@@ -1,13 +1,14 @@
 from collections import defaultdict
 from operator import itemgetter
 
-from geometry.neighbourhoods import LCR, VON_NEUMANN
+from geometry.neighbourhoods import LCR, VON_NEUMANN, radius_1d, radius_2d
 from utils import tuple_add
 
 
 class CellGrid(defaultdict):
     dimensionality = None
     neighbourhood = None
+    origin = None
 
     def __init__(self, cell_states, values=None, neighbourhood=None):
         self.cell_states = cell_states
@@ -30,7 +31,7 @@ class CellGrid(defaultdict):
         assert len(coord) == self.dimensionality
         assert value in self.cell_states
 
-        if value == self.dead_cell:
+        if coord != self.origin and value == self.dead_cell:
             if coord in self.keys():
                 super().__delitem__(coord)
             return
@@ -59,19 +60,26 @@ class CellGrid(defaultdict):
 
         return True
 
+    def get_extreme_coords(self, pad=0):
+        raise NotImplementedError
+
+    def get_live_cells(self):
+        return (cell for cell in self.values() if cell != self.dead_cell)
+
 
 class CellGrid1D(CellGrid):
     dimensionality = 1
     neighbourhood = LCR
+    origin = (0,)
 
-    def get_extreme_coords(self):
-        x_min = min(self.keys())[0] + min(self.neighbourhood, key=itemgetter(0))[0]
-        x_max = max(self.keys())[0] + max(self.neighbourhood, key=itemgetter(0))[0]
+    def get_extreme_coords(self, pad=0):
+        x_min = min(self.keys())[0] - pad
+        x_max = max(self.keys())[0] + pad
 
         return x_min, x_max
 
     def iterate_coords(self):
-        x_min, x_max = self.get_extreme_coords()
+        x_min, x_max = self.get_extreme_coords(pad=radius_1d(self.neighbourhood))
 
         for x in range(x_min, x_max + 1):
             yield (x,)
@@ -86,17 +94,18 @@ class CellGrid1D(CellGrid):
 class CellGrid2D(CellGrid):
     dimensionality = 2
     neighbourhood = VON_NEUMANN
+    origin = (0, 0)
 
-    def get_extreme_coords(self):
-        x_min = min(self.keys(), key=itemgetter(0))[0] + min(self.neighbourhood, key=itemgetter(0))[0]
-        x_max = max(self.keys(), key=itemgetter(0))[0] + max(self.neighbourhood, key=itemgetter(0))[0]
-        y_min = min(self.keys(), key=itemgetter(1))[1] + min(self.neighbourhood, key=itemgetter(1))[1]
-        y_max = max(self.keys(), key=itemgetter(1))[1] + max(self.neighbourhood, key=itemgetter(1))[1]
+    def get_extreme_coords(self, pad=0):
+        x_min = min(self.keys(), key=itemgetter(0))[0] - pad
+        x_max = max(self.keys(), key=itemgetter(0))[0] + pad
+        y_min = min(self.keys(), key=itemgetter(1))[1] - pad
+        y_max = max(self.keys(), key=itemgetter(1))[1] + pad
 
         return (x_min, y_min), (x_max, y_max)
 
     def iterate_coords(self):
-        (x_min, y_min), (x_max, y_max) = self.get_extreme_coords()
+        (x_min, y_min), (x_max, y_max) = self.get_extreme_coords(pad=radius_2d(self.neighbourhood))
 
         for y in range(y_min, y_max + 1):
             for x in range(x_min, x_max + 1):
@@ -115,12 +124,24 @@ class CellGrid2D(CellGrid):
 
         return s
 
+    @property
+    def area(self):
+        (x_min, y_min), (x_max, y_max) = self.get_extreme_coords()
+
+        return max(abs(x_max - x_min), 1) * max(abs(y_max - y_min), 1)
+
+    def get_rectangle(self, x_range, y_range):
+        l, r = x_range
+        t, b = y_range
+
+        return tuple(tuple(self.get((x, y)) for x in range(l, r + 1)) for y in range(t, b + 1))
+
 
 if __name__ == '__main__':
-    g = CellGrid2D(cell_states='01')
-    g.set((0, 0), '1')
-    g.set((3, -5), '1')
-    g.set((-5, 10), '1')
-    g.set((-5, -5), '1')
-    g.set((15, 0), '1')
-    print(g)
+    grid = CellGrid2D(cell_states='01')
+    grid.set((0, 0), '1')
+    grid.set((0, 5), '1')
+    grid.set((5, 0), '1')
+    print(grid.get_extreme_coords())
+    print(grid.area)
+    print(grid.get_rectangle((0, 5), (0, 5)))
