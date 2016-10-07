@@ -42,3 +42,7 @@ def is_whole_number(n):
 
 def tuple_add(a, b):
     return tuple(map(operator.add, a, b))
+
+
+def pluck(collection, attr):
+    return (getattr(item, attr) for item in collection)
