@@ -3,7 +3,7 @@ from datetime import datetime
 
 from geometry.neighbourhoods import VON_NEUMANN
 from run_experiment import initialize_scenario
-from selection import fitness_proportionate
+from selection import sigma_scaled
 from utils import char_set, random_string, splice
 
 
@@ -48,17 +48,17 @@ def mutation_f(genotype, **kwargs):
 
 
 if __name__ == '__main__':
-    ALPHABET = char_set(6)
+    ALPHABET = char_set(8)
     POPULATION_SIZE = 10
-    N_GENERATIONS = 10
+    N_GENERATIONS = 1000
     NEIGHBOURHOOD = VON_NEUMANN
     INITIAL_GENOTYPES = tuple(
         random_string(ALPHABET, len(ALPHABET) ** len(NEIGHBOURHOOD)) for _ in range(POPULATION_SIZE)
     )
-    MUTATION_CHANCE = 0.01
+    MUTATION_CHANCE = 0.25
     GENO_TO_PHENO_F = geno_to_pheno_f
     FITNESS_F = fitness
-    SELECTION_F = fitness_proportionate
+    SELECTION_F = sigma_scaled
     CROSSOVER_F = splice
     MUTATION_F = mutation_f
 

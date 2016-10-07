@@ -1,5 +1,6 @@
 from operator import attrgetter
 from random import random
+from statistics import stdev, mean
 
 
 def roulette(population, scaling_func, **kwargs):
@@ -60,9 +61,12 @@ def fitness_proportionate(population, **kwargs):
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def sigma_scaled(sigma, average_fitness, population, **kwargs):
-    expected_value_func = lambda x: 1 if sigma == 0 else 1 + ((x.fitness - average_fitness) / (2 * sigma))
-    sigma_sum = sum(expected_value_func(x) for x in population)
+def sigma_scaled(population, **kwargs):
+    fitnesses = tuple(x.fitness for x in population)
+    sigma = stdev(fitnesses)
+    average_fitness = mean(fitnesses)
+    expected_value_func = lambda x: 1 if sigma == 0 else 1 + ((x - average_fitness) / (2 * sigma))
+    sigma_sum = sum(expected_value_func(x) for x in fitnesses)
     scaling_func = lambda x: expected_value_func(x) / sigma_sum
 
     return roulette(population=population, scaling_func=scaling_func, **kwargs)

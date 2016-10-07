@@ -95,6 +95,7 @@ def finalize_generation(task, db_path, scenario_id, generation, selection_f, cro
     )
 
     logging.info('Finished generation {} of scenario {}'.format(generation, scenario_id))
+    return generation
 
 
 @shared_task(name='handle_individual')
