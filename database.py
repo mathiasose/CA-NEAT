@@ -1,8 +1,9 @@
+import dill
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative.api import declarative_base
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.schema import Column, ForeignKey
-from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, String
+from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, String, PickleType
 
 Base = declarative_base()
 
@@ -22,7 +23,7 @@ class Individual(Base):
     scenario_id = Column(Integer, ForeignKey('scenarios.id'), primary_key=True)
     individual_number = Column(Integer, primary_key=True)
     generation = Column(Integer, primary_key=True)
-    genotype = Column(String)
+    genotype = Column(PickleType(pickler=dill))
     fitness = Column(Float)
     timestamp = Column(DateTime)
 
@@ -46,13 +47,7 @@ class Db:
             session = self.Session()
 
         session.add(individual)
-        session.commit()
 
-    def save_individuals(self, individuals, session=None):
-        if session is None:
-            session = self.Session()
-
-        session.add_all(individuals)
         session.commit()
 
     def get_scenario(self, scenario_id, session=None):

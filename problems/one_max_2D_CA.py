@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 from geometry.neighbourhoods import VON_NEUMANN
-from plot import plot
+from plot import plot_fitnesses_over_generations
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
 from utils import random_string, splice
@@ -72,4 +72,4 @@ if __name__ == '__main__':
         neighbourhood=NEIGHBOURHOOD,
     )
 
-    plot(DB_PATH, title=DESCRIPTION, interval=1)
+    plot_fitnesses_over_generations(DB_PATH, title=DESCRIPTION, interval=1)

@@ -10,7 +10,7 @@ def get_db(path):
     return Db(path, echo=False)
 
 
-def plot(db_path, title, interval=None):
+def plot_fitnesses_over_generations(db_path, title, interval=None):
     db = get_db(db_path)
     session = db.Session()
     scenario = db.get_scenario(1, session=session)
@@ -43,6 +43,7 @@ def plot(db_path, title, interval=None):
 
         if done == last_generation:
             break
+
         elif interval:
             plt.pause(interval)
         else:
@@ -52,5 +53,5 @@ def plot(db_path, title, interval=None):
 
 
 if __name__ == '__main__':
-    file = '2016-10-05 22:51:27.776011.db'
-    plot('sqlite:///db/{}'.format(file), interval=INTERVAL)
+    file = '2016-10-09 15:34:18.515869.db'
+    plot_fitnesses_over_generations('sqlite:///db/{}'.format(file), interval=INTERVAL, title='')

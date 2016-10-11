@@ -46,3 +46,7 @@ def tuple_add(a, b):
 
 def pluck(collection, attr):
     return (getattr(item, attr) for item in collection)
+
+
+def make_step_f(threshold=0.5):
+    return lambda x: 1 if x > threshold else 0

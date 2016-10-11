@@ -7,6 +7,8 @@ from sqlalchemy.sql.functions import now
 from add_dill import add_dill
 from database import Db, Individual, Scenario
 
+RETRY = 5
+
 add_dill()
 
 
@@ -51,10 +53,12 @@ def finalize_generation(task, db_path, scenario_id, generation, selection_f, cro
     population_size_target = scenario.population_size
     population = db.get_generation(scenario_id, generation)
 
+    assert population.count() <= population_size_target  # something is terribly wrong if this fails
+
     try:
         assert population.count() == population_size_target
     except AssertionError:
-        raise task.retry(countdown=5)
+        raise task.retry(countdown=RETRY)
 
     next_gen = generation + 1
 
@@ -70,8 +74,6 @@ def finalize_generation(task, db_path, scenario_id, generation, selection_f, cro
 
         if random() < mutation_chance:
             genotype = mutation_f(genotype=genotype, **kwargs)
-
-        assert len(genotype) == len(a.genotype)
 
         new_genotypes.append(genotype)
 
@@ -103,6 +105,9 @@ def handle_individual(db_path, scenario_id, generation, individual_number, genot
                       **kwargs):
     phenotype = geno_to_pheno_f(genotype=genotype, **kwargs)
     fitness = fitness_f(phenotype=phenotype, **kwargs)
+
+    if hasattr(genotype, 'fitness'):
+        genotype.fitness = fitness
 
     individual = Individual(
         scenario_id=scenario_id,

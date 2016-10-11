@@ -2,3 +2,4 @@ SQLAlchemy==1.0.14
 celery==3.1.23
 dill==0.2.5
 git+ssh://git@github.com/mathiasose/billiard.git@dill
+neat-python==0.8
