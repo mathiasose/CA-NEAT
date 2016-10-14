@@ -2,10 +2,10 @@ import os
 from datetime import datetime
 
 from geometry.neighbourhoods import VON_NEUMANN
-from plot import plot_fitnesses_over_generations
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
 from utils import random_string, splice
+from visualization.plot_fitness import plot_fitnesses_over_generations
 
 
 def fitness(phenotype, **kwargs):

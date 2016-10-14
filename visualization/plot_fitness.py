@@ -23,6 +23,8 @@ def plot_fitnesses_over_generations(db_path, title, interval=None):
 
     def draw():
         plt.clf()
+        plt.ylabel('fitness')
+        plt.xlabel('generation')
         plt.axis([0, n_generations, -0.1, 1.1])
         plt.boxplot(tuple(generation_fitnesses.get(n, []) for n in range(n_generations)))
         plt.title(title)
@@ -53,5 +55,5 @@ def plot_fitnesses_over_generations(db_path, title, interval=None):
 
 
 if __name__ == '__main__':
-    file = '2016-10-09 15:34:18.515869.db'
+    file = '2016-10-13 13:08:45.587100.db'
     plot_fitnesses_over_generations('sqlite:///db/{}'.format(file), interval=INTERVAL, title='')

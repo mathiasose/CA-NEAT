@@ -2,14 +2,14 @@ import os
 from datetime import datetime
 
 from neat.config import Config
-from neat.genes import NodeGene, ConnectionGene
+from neat.genes import ConnectionGene, NodeGene
 from neat.genome import Genome
 
 from geometry.neighbourhoods import VON_NEUMANN
-from plot import plot_fitnesses_over_generations
 from run_experiment import initialize_scenario
 from run_neat import create_initial_population
 from selection import sigma_scaled
+from visualization.plot_fitness import plot_fitnesses_over_generations
 
 
 def fitness(phenotype, **kwargs):
@@ -55,8 +55,8 @@ def crossover(a, b, **kwargs):
 if __name__ == '__main__':
     ALPHABET = (0, 1)
     NEIGHBOURHOOD = VON_NEUMANN
-    POPULATION_SIZE = 100
-    N_GENERATIONS = 100
+    POPULATION_SIZE = 50
+    N_GENERATIONS = 20
 
     NEAT_CONFIG = Config()
     NEAT_CONFIG.pop_size = POPULATION_SIZE
@@ -98,6 +98,7 @@ if __name__ == '__main__':
 
     DESCRIPTION = '"Max one 2D CA"\npopulation size: {}\ngenerations: {}'.format(POPULATION_SIZE, N_GENERATIONS)
     gt = INITIAL_GENOTYPES[0]
+
     initialize_scenario(
         db_path=DB_PATH,
         description=DESCRIPTION,
@@ -113,5 +114,4 @@ if __name__ == '__main__':
         alphabet=ALPHABET,
         neighbourhood=NEIGHBOURHOOD,
     )
-
     plot_fitnesses_over_generations(DB_PATH, title=DESCRIPTION, interval=1)
