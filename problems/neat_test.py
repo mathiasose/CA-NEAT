@@ -13,16 +13,20 @@ from visualization.plot_fitness import plot_fitnesses_over_generations
 
 
 def fitness(phenotype, **kwargs):
-    from geometry.cell_grid import CellGrid2D
+    from geometry.cell_grid import FiniteCellGrid2D
     from ca.iterate import n_iterations
 
     neighbourhood = kwargs.get('neighbourhood')
     alphabet = kwargs.get('alphabet')
 
-    initial = CellGrid2D(
+    r = 5
+
+    initial = FiniteCellGrid2D(
         cell_states=alphabet,
         neighbourhood=neighbourhood,
-        values=(((0, 0), 1),)
+        x_range=(-r, r),
+        y_range=(-r, r),
+        values={(0, 0): 1}
     )
 
     from utils import make_step_f
@@ -34,7 +38,7 @@ def fitness(phenotype, **kwargs):
 
     grid = n_iterations(initial_grid=initial, transition_f=transition_f, n=10)
 
-    return sum(sum(int(x) for x in row) for row in grid.get_rectangle((-5, 4), (-5, 4))) / 100
+    return sum(sum(int(x) for x in row) for row in grid.get_whole()) / grid.area
 
 
 def geno_to_pheno_f(genotype, **kwargs):
@@ -55,8 +59,8 @@ def crossover(a, b, **kwargs):
 if __name__ == '__main__':
     ALPHABET = (0, 1)
     NEIGHBOURHOOD = VON_NEUMANN
-    POPULATION_SIZE = 50
-    N_GENERATIONS = 20
+    POPULATION_SIZE = 100
+    N_GENERATIONS = 100
 
     NEAT_CONFIG = Config()
     NEAT_CONFIG.pop_size = POPULATION_SIZE
@@ -83,6 +87,9 @@ if __name__ == '__main__':
     NEAT_CONFIG.prob_toggle_link = 0.0138
     NEAT_CONFIG.max_weight = 30
     NEAT_CONFIG.min_weight = -30
+    NEAT_CONFIG.excess_coefficient = 1.0
+    NEAT_CONFIG.disjoint_coefficient = 1.0
+    NEAT_CONFIG.weight_coefficient = 0.4
 
     INITIAL_GENOTYPES = list(create_initial_population(NEAT_CONFIG))
 
@@ -93,7 +100,7 @@ if __name__ == '__main__':
     CROSSOVER_F = crossover
     MUTATION_F = mutation_f
 
-    DB_DIR = 'db/'
+    DB_DIR = 'db/neat_test/'
     DB_PATH = os.path.join('sqlite:///', DB_DIR, '{}.db'.format(datetime.now()))
 
     DESCRIPTION = '"Max one 2D CA"\npopulation size: {}\ngenerations: {}'.format(POPULATION_SIZE, N_GENERATIONS)
@@ -113,5 +120,9 @@ if __name__ == '__main__':
         mutation_chance=MUTATION_CHANCE,
         alphabet=ALPHABET,
         neighbourhood=NEIGHBOURHOOD,
+        elitism=2,
+        stagnation_limit=None,
+        survival_threshold=0.5,
+        compatibility_threshold=3.0,
     )
     plot_fitnesses_over_generations(DB_PATH, title=DESCRIPTION, interval=1)
