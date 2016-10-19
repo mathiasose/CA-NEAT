@@ -13,4 +13,5 @@ app = celery.Celery('celery_app', config_source='celeryconfig', include=(
     'utils',
     'selection',
     'stagnation',
+    'config',
 ))

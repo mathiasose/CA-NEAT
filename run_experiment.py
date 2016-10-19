@@ -3,16 +3,19 @@ from typing import List
 
 from celery.app import shared_task
 from neat.genome import Genome
+from neat.nn import create_feed_forward_phenotype
 from neat.population import CompleteExtinctionException
 from sqlalchemy.sql.functions import now
 
 from add_dill import add_dill
+from config import CAConfig, CPPNNEATConfig
 from database import Db, Individual, Scenario
-from run_neat import neat_reproduction, sort_into_species, speciate
+from run_neat import (create_initial_population, neat_reproduction,
+                      sort_into_species, speciate)
 from stagnation import (get_total_fitnesses_by_species_by_generation,
                         is_species_stagnant)
 
-RETRY = 5
+WAIT = 10
 
 add_dill()
 
@@ -21,54 +24,65 @@ def get_db(path):
     return Db(path, echo=False)
 
 
-def initialize_scenario(db_path: str, initial_genotypes: List[Genome], description: str, generations: int,
-                        population_size: int, compatibility_threshold: float, **kwargs):
-    scenario = Scenario(description=description, generations=generations, population_size=population_size)
+def initialize_scenario(db_path: str, description: str, fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
+    scenario = Scenario(description=description, generations=neat_config.generations,
+                        population_size=neat_config.pop_size)
     get_db(db_path).save_scenario(scenario)
 
-    speciate(initial_genotypes, compatibility_threshold=compatibility_threshold)
+    initial_genotypes = list(create_initial_population(neat_config))
+
+    species = speciate(initial_genotypes, compatibility_threshold=neat_config.compatibility_threshold)
+
+    assert len(species) > 1
 
     initialize_generation(
         db_path=db_path,
         scenario_id=scenario.id,
         generation=0,
         genotypes=initial_genotypes,
-        **kwargs
+        fitness_f=fitness_f,
+        neat_config=neat_config,
+        ca_config=ca_config,
     )
+
+
+def initialize_generation(db_path: str, scenario_id: int, generation: int, genotypes: List[Genome],
+                          fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
+    for i, genotype in enumerate(genotypes):
+        handle_individual.delay(
+            db_path=db_path,
+            scenario_id=scenario_id,
+            generation=generation,
+            individual_number=i,
+            genotype=genotype,
+            fitness_f=fitness_f,
+            neat_config=neat_config,
+            ca_config=ca_config,
+        )
 
     finalize_generation.delay(
         db_path=db_path,
-        scenario_id=scenario.id,
-        generation=0,
-        compatibility_threshold=compatibility_threshold,
-        **kwargs
+        scenario_id=scenario_id,
+        generation=generation,
+        fitness_f=fitness_f,
+        neat_config=neat_config,
+        ca_config=ca_config,
     )
 
 
-def initialize_generation(genotypes: List[Genome], **kwargs):
-    for i, genotype in enumerate(genotypes):
-        handle_individual.delay(
-            individual_number=i,
-            genotype=genotype,
-            **kwargs
-        )
-
-
 @shared_task(name='finalize_generation', bind=True)
-def finalize_generation(task, db_path: str, scenario_id: int, generation: int, selection_f,
-                        crossover_f, mutation_f, mutation_chance: float, stagnation_limit: int,
-                        survival_threshold: float, compatibility_threshold: float, elitism=0, **kwargs):
+def finalize_generation(task, db_path: str, scenario_id: int, generation: int, fitness_f,
+                        neat_config: CPPNNEATConfig, ca_config: CAConfig):
     db = get_db(db_path)
     scenario = db.get_scenario(scenario_id)
-    population_size_target = scenario.population_size
     population = db.get_generation(scenario_id, generation)
 
-    assert population.count() <= population_size_target  # something is terribly wrong if this fails
+    assert population.count() <= scenario.population_size  # something is terribly wrong if this fails
 
     try:
-        assert population.count() == population_size_target
+        assert population.count() == scenario.population_size
     except AssertionError:
-        raise task.retry(countdown=RETRY)
+        raise task.retry(countdown=WAIT)
 
     next_gen = generation + 1
 
@@ -78,40 +92,32 @@ def finalize_generation(task, db_path: str, scenario_id: int, generation: int, s
 
     species = sort_into_species([individual.genotype for individual in population])
 
-    if (not stagnation_limit) or (generation < stagnation_limit):
+    if (not neat_config.stagnation_limit) or (generation < neat_config.stagnation_limit):
         alive_species = species
     else:
-        total_fitnesses = get_total_fitnesses_by_species_by_generation(db)
-        alive_species = [s for s in species if not is_species_stagnant(total_fitnesses, s.ID, stagnation_limit)]
+        fitnesses = get_total_fitnesses_by_species_by_generation(db)
+        alive_species = [s for s in species if not is_species_stagnant(fitnesses, s.ID, neat_config.stagnation_limit)]
 
     if not alive_species:
         raise CompleteExtinctionException
 
-    new_species, new_genotypes = neat_reproduction(species=alive_species, pop_size=scenario.population_size,
-                                                   survival_threshold=survival_threshold, elitism=elitism)
-    speciate(new_genotypes, compatibility_threshold=compatibility_threshold, existing_species=new_species)
+    new_species, new_genotypes = neat_reproduction(
+        species=alive_species, pop_size=scenario.population_size, survival_threshold=neat_config.survival_threshold,
+        elitism=neat_config.elitism)
+
+    print(len(new_genotypes))
+    assert len(new_genotypes) == scenario.population_size
+
+    speciate(new_genotypes, compatibility_threshold=neat_config.compatibility_threshold, existing_species=new_species)
 
     initialize_generation(
         db_path=db_path,
         scenario_id=scenario_id,
         generation=next_gen,
         genotypes=new_genotypes,
-        **kwargs
-    )
-
-    finalize_generation.delay(
-        db_path=db_path,
-        scenario_id=scenario_id,
-        generation=next_gen,
-        selection_f=selection_f,
-        crossover_f=crossover_f,
-        mutation_f=mutation_f,
-        mutation_chance=mutation_chance,
-        stagnation_limit=stagnation_limit,
-        survival_threshold=survival_threshold,
-        compatibility_threshold=compatibility_threshold,
-        elitism=elitism,
-        **kwargs
+        fitness_f=fitness_f,
+        neat_config=neat_config,
+        ca_config=ca_config,
     )
 
     logging.info('Finished generation {} of scenario {}'.format(generation, scenario_id))
@@ -120,9 +126,9 @@ def finalize_generation(task, db_path: str, scenario_id: int, generation: int, s
 
 @shared_task(name='handle_individual')
 def handle_individual(db_path: str, scenario_id: int, generation: int, individual_number: int, genotype: Genome,
-                      geno_to_pheno_f, fitness_f, **kwargs):
-    phenotype = geno_to_pheno_f(genotype=genotype, **kwargs)
-    fitness = fitness_f(phenotype=phenotype, **kwargs)
+                      fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
+    phenotype = create_feed_forward_phenotype(genotype)
+    fitness = fitness_f(phenotype=phenotype, ca_config=ca_config)
 
     assert 0.0 <= fitness <= 1.0
 
