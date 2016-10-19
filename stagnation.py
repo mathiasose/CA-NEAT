@@ -1,4 +1,5 @@
 from collections import defaultdict
+from statistics import median
 from typing import List
 from uuid import UUID
 
@@ -17,7 +18,8 @@ def get_total_fitnesses_by_species_by_generation(db, scenario_id=1):
         for individual in generation:
             fitnesses_by_species[individual.genotype.species_id] += individual.fitness
 
-        total_fitnesses_by_species_by_generation.append(fitnesses_by_species)
+        if fitnesses_by_species:
+            total_fitnesses_by_species_by_generation.append(fitnesses_by_species)
 
     return total_fitnesses_by_species_by_generation
 
@@ -28,6 +30,13 @@ def is_species_stagnant(total_fitnesses_by_species_by_generation: List[dict], sp
     is stagnant (or going down)
     """
     stagnation_counter = 0
+
+    latest_gen = total_fitnesses_by_species_by_generation[-1]
+
+    median_fitness_for_generation = median(latest_gen.values())
+
+    if latest_gen[species_id] > median_fitness_for_generation:
+        return False
 
     for gen_num in range(len(total_fitnesses_by_species_by_generation) - 1, 0, -1):
         first_gen_index = gen_num
@@ -49,16 +58,13 @@ if __name__ == '__main__':
 
     STAGNATION_LIMIT = 10
 
-    DB_PATH = os.path.join('sqlite:///', 'db/neat_test/', '2016-10-18 14:23:35.524125.db')
+    DB_PATH = os.path.join('sqlite:///', 'db/neat_test/', '2016-10-18 21:07:14.720841.db')
     DB = get_db(DB_PATH)
 
     total_fitnesses_by_species_by_generation = get_total_fitnesses_by_species_by_generation(DB)
 
-    print(total_fitnesses_by_species_by_generation)
-
     latest_gen = total_fitnesses_by_species_by_generation[-1]
     current_species = latest_gen.keys()
-    print(current_species)
 
     for species_id in current_species:
         l = (list(total_fitnesses_by_species_by_generation[x][species_id] for x in

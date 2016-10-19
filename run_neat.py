@@ -1,8 +1,8 @@
 import math
+import random
 from typing import List
 from uuid import uuid4
 
-import random
 from matplotlib.colors import ListedColormap
 from neat.config import Config
 from neat.genes import ConnectionGene, NodeGene
@@ -51,19 +51,6 @@ def speciate(genotypes: List[Genome], compatibility_threshold, existing_species=
     return species
 
 
-def neat_development(genotype, **kwargs):
-    return create_feed_forward_phenotype(genotype)
-
-
-def neat_mutation(genotype, **kwargs):
-    genotype.mutate()
-    return genotype
-
-
-def neat_crossover(a, b, **kwargs):
-    return a.crossover(other=b, child_id=uuid4())
-
-
 def sort_into_species(genotypes: List[Genome]):
     species = {}
     for gt in genotypes:
@@ -104,18 +91,24 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
             spawn *= 0.9
         spawn_amounts.append(spawn)
 
-    # Normalize the spawn amounts so that the next generation is roughly
-    # the population size requested by the user.
     total_spawn = sum(spawn_amounts)
     norm = pop_size / total_spawn
     spawn_amounts = [int(round(n * norm)) for n in spawn_amounts]
 
+    # make adjustments until exactly pop_size
+    i = 0
+    while sum(spawn_amounts) != pop_size:
+        if sum(spawn_amounts) < pop_size:
+            spawn_amounts[i] += 1
+        else:
+            if spawn_amounts[i] > 1:
+                spawn_amounts[i] -= 1
+
+        i += 1
+
     new_population = []
     new_species = []
     for spawn, (s, sfitness) in zip(spawn_amounts, species_fitness):
-        # If elitism is enabled, each species always at least gets to retain its elites.
-        spawn = max(spawn, elitism)
-
         if spawn <= 0:
             continue
 
@@ -129,8 +122,9 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
 
         # Transfer elites to new generation.
         if elitism > 0:
-            new_population.extend(old_members[:elitism])
-            spawn -= elitism
+            elites = old_members[:elitism]
+            new_population.extend(elites)
+            spawn -= len(elites) # possibly fewer than the elitism number
 
         if spawn <= 0:
             continue
