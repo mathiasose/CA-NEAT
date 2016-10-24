@@ -3,11 +3,7 @@ import random
 from typing import List
 from uuid import uuid4
 
-from matplotlib.colors import ListedColormap
-from neat.config import Config
-from neat.genes import ConnectionGene, NodeGene
 from neat.genome import Genome
-from neat.nn import create_feed_forward_phenotype
 from neat.species import Species
 
 
@@ -89,7 +85,7 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
             spawn *= 1.1
         else:
             spawn *= 0.9
-        spawn_amounts.append(spawn)
+        spawn_amounts.append(max(spawn, elitism))
 
     total_spawn = sum(spawn_amounts)
     norm = pop_size / total_spawn
@@ -99,12 +95,11 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
     i = 0
     while sum(spawn_amounts) != pop_size:
         if sum(spawn_amounts) < pop_size:
-            spawn_amounts[i] += 1
+            spawn_amounts[i] = spawn_amounts[i] + 1
         else:
-            if spawn_amounts[i] > 1:
-                spawn_amounts[i] -= 1
+            spawn_amounts[i] = max(spawn_amounts[i] - 1, elitism)
 
-        i += 1
+        i = (i + 1) % len(spawn_amounts)
 
     new_population = []
     new_species = []
@@ -122,9 +117,8 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
 
         # Transfer elites to new generation.
         if elitism > 0:
-            elites = old_members[:elitism]
-            new_population.extend(elites)
-            spawn -= len(elites) # possibly fewer than the elitism number
+            new_population.extend(old_members[:elitism])
+            spawn -= elitism
 
         if spawn <= 0:
             continue
@@ -148,67 +142,3 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
             new_population.append(child.mutate())
 
     return new_species, new_population
-
-
-if __name__ == '__main__':
-    test_config = Config()
-    test_config.input_nodes = 2
-    test_config.output_nodes = 1
-    test_config.node_gene_type = NodeGene
-    test_config.conn_gene_type = ConnectionGene
-    test_config.activation_functions = ('sigmoid',)
-    test_config.weight_stdev = 1.0
-    test_config.pop_size = 10
-    test_config.genotype = Genome
-    test_config.compatibility_threshold = 3.0
-    test_config.prob_add_conn = 0.988
-    test_config.prob_add_node = 0.085
-    test_config.prob_delete_conn = 0.146
-    test_config.prob_delete_node = 0.0352
-    test_config.prob_mutate_bias = 0.0509
-    test_config.bias_mutation_power = 2.093
-    test_config.prob_mutate_response = 0.1
-    test_config.response_mutation_power = 0.1
-    test_config.prob_mutate_weight = 0.460
-    test_config.prob_replace_weight = 0.0245
-    test_config.weight_mutation_power = 0.825
-    test_config.prob_mutate_activation = 0.0
-    test_config.prob_toggle_link = 0.0138
-
-    test_config.max_weight = 30
-    test_config.min_weight = -30
-
-    if __name__ == '__main__':
-
-        # config.reproduction_type = DefaultReproduction
-        # config.stagnation_type = DefaultStagnation
-
-
-        population = list(create_initial_population(test_config))
-        # print(*population, sep='\n\n')
-        species = list(speciate(population))
-        # print(*species, sep='\n')
-        # print(
-        #    *(create_feed_forward_phenotype(genotype).serial_activate(inputs=[0, 1]) for genotype in population),
-        #    sep='\n'
-        # )
-
-        import matplotlib.pyplot as plt
-        import seaborn
-
-        seaborn.set(style='white')
-
-        gt = population[0]
-        for _ in range(10):
-            gt.mutate()
-
-            pt = create_feed_forward_phenotype(gt)
-            f = lambda *args: pt.serial_activate(args)[0]
-            R = 50
-            mat = [[f(x, y) for x in range(-R, R)] for y in range(-R, R)]
-            # print(*mat, sep='\n')
-
-
-            plt.imshow(mat, interpolation='nearest', extent=(-R, R, -R, R),
-                       cmap=ListedColormap(seaborn.color_palette("hls")))
-            plt.show()
