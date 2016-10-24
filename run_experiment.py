@@ -15,7 +15,7 @@ from run_neat import (create_initial_population, neat_reproduction,
 from stagnation import (get_total_fitnesses_by_species_by_generation,
                         is_species_stagnant)
 
-WAIT = 10
+WAIT = 5
 
 add_dill()
 
@@ -48,41 +48,35 @@ def initialize_scenario(db_path: str, description: str, fitness_f, neat_config: 
 
 def initialize_generation(db_path: str, scenario_id: int, generation: int, genotypes: List[Genome],
                           fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
-    for i, genotype in enumerate(genotypes):
-        handle_individual.delay(
-            db_path=db_path,
-            scenario_id=scenario_id,
-            generation=generation,
-            individual_number=i,
-            genotype=genotype,
-            fitness_f=fitness_f,
-            neat_config=neat_config,
-            ca_config=ca_config,
-        )
+    from celery import group, chord
 
-    finalize_generation.delay(
+    grouped_tasks = group(handle_individual.s(
         db_path=db_path,
         scenario_id=scenario_id,
         generation=generation,
+        individual_number=i,
+        genotype=genotype,
         fitness_f=fitness_f,
         neat_config=neat_config,
         ca_config=ca_config,
-    )
+    ) for i, genotype in enumerate(genotypes))
+
+    final_task = finalize_generation.subtask(args=(db_path, scenario_id, generation, fitness_f, neat_config, ca_config))
+
+    chord(grouped_tasks, final_task)()
 
 
 @shared_task(name='finalize_generation', bind=True)
-def finalize_generation(task, db_path: str, scenario_id: int, generation: int, fitness_f,
+def finalize_generation(task, results, db_path: str, scenario_id: int, generation: int, fitness_f,
                         neat_config: CPPNNEATConfig, ca_config: CAConfig):
+    """
+    'results' is return values of preceding group of tasks, can safely be ignored
+    """
     db = get_db(db_path)
     scenario = db.get_scenario(scenario_id)
     population = db.get_generation(scenario_id, generation)
 
-    assert population.count() <= scenario.population_size  # something is terribly wrong if this fails
-
-    try:
-        assert population.count() == scenario.population_size
-    except AssertionError:
-        raise task.retry(countdown=WAIT)
+    assert population.count() == scenario.population_size
 
     next_gen = generation + 1
 
@@ -105,7 +99,6 @@ def finalize_generation(task, db_path: str, scenario_id: int, generation: int, f
         species=alive_species, pop_size=scenario.population_size, survival_threshold=neat_config.survival_threshold,
         elitism=neat_config.elitism)
 
-    print(len(new_genotypes))
     assert len(new_genotypes) == scenario.population_size
 
     speciate(new_genotypes, compatibility_threshold=neat_config.compatibility_threshold, existing_species=new_species)
