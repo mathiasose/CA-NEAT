@@ -137,7 +137,7 @@ class CellGrid2D(CellGrid):
         for y in range(y_min, y_max + 1):
             s += '{}\t|'.format(y)
             for x in range(x_min, x_max + 1):
-                v = self.get((x, y))
+                v = str(self.get((x, y)))
                 s += ' ' if v == self.dead_cell else v
             s += '|\n'
 

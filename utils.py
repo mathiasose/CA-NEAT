@@ -50,3 +50,11 @@ def pluck(collection, attr):
 
 def make_step_f(threshold=0.5):
     return lambda x: 1 if x > threshold else 0
+
+
+def is_even(n: int) -> int:
+    return (n % 2) == 0
+
+
+def is_odd(n: int) -> int:
+    return not is_even(n)

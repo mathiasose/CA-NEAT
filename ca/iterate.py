@@ -1,4 +1,5 @@
 from ca.rule_tables import table_from_string
+from config import CAConfig
 from geometry.cell_grid import CellGrid2D
 from utils import random_bitstring
 
@@ -32,6 +33,34 @@ def iterate_until_stable(initial_grid, transition_f, max_n):
             return new
 
         grid = new
+
+    return grid
+
+
+def ca_develop(phenotype, ca_config: CAConfig):
+    from geometry.cell_grid import FiniteCellGrid2D
+    from utils import make_step_f
+
+    neighbourhood = ca_config.neighbourhood
+    alphabet = ca_config.alphabet
+    r = ca_config.r
+    iterations = ca_config.iterations
+
+    initial = FiniteCellGrid2D(
+        cell_states=alphabet,
+        neighbourhood=neighbourhood,
+        x_range=(-r, r),
+        y_range=(-r, r),
+        values={(0, 0): 1},
+    )
+
+    step = make_step_f(0.5)
+
+    def transition_f(args):
+        t = tuple(int(x) for x in args)
+        return step(phenotype.serial_activate(t)[0])
+
+    grid = n_iterations(initial_grid=initial, transition_f=transition_f, n=iterations)
 
     return grid
 

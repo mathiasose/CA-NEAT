@@ -24,3 +24,5 @@ class CAConfig:
     neighbourhood = None
     alphabet = None
     geometry = None
+    iterations = None
+    r = None
