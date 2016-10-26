@@ -4,6 +4,7 @@ from datetime import datetime
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
 from run_experiment import initialize_scenario
+from selection import sigma_scaled
 from visualization.plot_fitness import plot_fitnesses_over_generations
 
 
@@ -28,7 +29,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     x = correct_count / grid.area
 
     k = 5
-    redistribute = lambda x: exp(k * x) / exp(k)
+    redistribute = lambda x: x * exp(k * x) / exp(k)
 
     return redistribute(x)
 
@@ -40,9 +41,9 @@ CA_CONFIG.r = 5
 CA_CONFIG.iterations = 10
 
 NEAT_CONFIG = CPPNNEATConfig()
-NEAT_CONFIG.pop_size = 100
-NEAT_CONFIG.generations = 100
-NEAT_CONFIG.stagnation_limit = 10
+NEAT_CONFIG.pop_size = 200
+NEAT_CONFIG.generations = 50
+NEAT_CONFIG.stagnation_limit = 5
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.weight_stdev = 1.0
 NEAT_CONFIG.compatibility_threshold = 0.5
@@ -65,7 +66,7 @@ NEAT_CONFIG.excess_coefficient = 1.0
 NEAT_CONFIG.disjoint_coefficient = 1.0
 NEAT_CONFIG.weight_coefficient = 0.4
 NEAT_CONFIG.elitism = 2
-NEAT_CONFIG.survival_threshold = 0.2
+NEAT_CONFIG.survival_threshold = 0.1
 
 if __name__ == '__main__':
     DB_DIR = 'db/checkerboard/'
@@ -79,6 +80,7 @@ if __name__ == '__main__':
         db_path=DB_PATH,
         description=DESCRIPTION,
         fitness_f=fitness_f,
+        pair_selection_f=sigma_scaled,
         neat_config=NEAT_CONFIG,
         ca_config=CA_CONFIG,
     )

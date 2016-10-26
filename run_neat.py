@@ -1,10 +1,12 @@
 import math
-import random
 from typing import List
 from uuid import uuid4
 
+import random
 from neat.genome import Genome
 from neat.species import Species
+
+from selection import TooFewIndividuals, random_choice
 
 
 def create_initial_population(neat_config):
@@ -62,7 +64,7 @@ def sort_into_species(genotypes: List[Genome]):
     return species.values()
 
 
-def neat_reproduction(species: List[Species], pop_size, survival_threshold, elitism=0, **kwargs):
+def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair_selection_f, elitism=0, **kwargs):
     species_fitness = []
     avg_adjusted_fitness = 0.0
     for s in species:
@@ -95,7 +97,7 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
     i = 0
     while sum(spawn_amounts) != pop_size:
         if sum(spawn_amounts) < pop_size:
-            spawn_amounts[i] = spawn_amounts[i] + 1
+            spawn_amounts[i] = (spawn_amounts[i] + 1)
         else:
             spawn_amounts[i] = max(spawn_amounts[i] - 1, elitism)
 
@@ -117,8 +119,9 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
 
         # Transfer elites to new generation.
         if elitism > 0:
-            new_population.extend(old_members[:elitism])
-            spawn -= elitism
+            elites = old_members[:elitism]
+            new_population.extend(elites)
+            spawn -= len(elites)
 
         if spawn <= 0:
             continue
@@ -129,12 +132,16 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, elit
         repro_cutoff = max(repro_cutoff, 2)
         old_members = old_members[:repro_cutoff]
 
-        # Randomly choose parents and produce the number of offspring allotted to the species.
+        # choose parents and produce the number of offspring allotted to the species.
+        try:
+            pair_generator = pair_selection_f(old_members)
+        except TooFewIndividuals:
+            pair_generator = random_choice(old_members)
+
         while spawn > 0:
             spawn -= 1
 
-            parent1 = random.choice(old_members)
-            parent2 = random.choice(old_members)
+            parent1, parent2 = next(pair_generator)
 
             # Note that if the parents are not distinct, crossover will produce a
             # genetically identical clone of the parent (but with a different ID).

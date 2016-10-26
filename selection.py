@@ -1,6 +1,11 @@
+from statistics import mean, stdev
+
 from operator import attrgetter
-from random import random
-from statistics import stdev, mean
+from random import random, choice, sample
+
+
+class TooFewIndividuals(Exception):
+    pass
 
 
 def roulette(population, scaling_func, **kwargs):
@@ -9,22 +14,27 @@ def roulette(population, scaling_func, **kwargs):
     requires a scaling_func to scale the "slices"
     """
 
+    try:
+        assert len(population) > 1
+    except AssertionError:
+        raise TooFewIndividuals
+
     def generate_roulette():
         """
         returns a function that when called will select an indidividual from the population
         based on the normalized fitness value as decided by fitness_func
         """
 
-        scaled_fitnesses = list((x.individual_number, scaling_func(x.fitness)) for x in population)
+        scaled_fitnesses = list((x.ID, scaling_func(x.fitness)) for x in population)
 
         scaled_fitnesses.sort(key=lambda x: x[1])
 
         roulette = dict()
 
         current_sum = 0.0
-        for individual_number, p in scaled_fitnesses:
+        for id, p in scaled_fitnesses:
             next_sum = current_sum + p
-            roulette[(current_sum, next_sum)] = individual_number
+            roulette[(current_sum, next_sum)] = id
             current_sum = next_sum
 
         sorted_by_lower_bound = sorted(roulette.keys(), key=lambda x: x[0])
@@ -40,7 +50,7 @@ def roulette(population, scaling_func, **kwargs):
 
     spin = generate_roulette()
 
-    individuals_by_number = {x.individual_number: x for x in population}
+    individuals_by_id = {x.ID: x for x in population}
 
     while True:
         a = b = spin()
@@ -48,10 +58,7 @@ def roulette(population, scaling_func, **kwargs):
         while a == b:
             b = spin()
 
-        if random() < 0.5:
-            a, b = b, a
-
-        yield (individuals_by_number.get(a), individuals_by_number.get(b))
+        yield (individuals_by_id.get(a), individuals_by_id.get(b))
 
 
 def fitness_proportionate(population, **kwargs):
@@ -62,8 +69,15 @@ def fitness_proportionate(population, **kwargs):
 
 
 def sigma_scaled(population, **kwargs):
+    try:
+        assert len(population) > 1
+    except AssertionError:
+        raise TooFewIndividuals
+
     fitnesses = tuple(x.fitness for x in population)
+
     sigma = stdev(fitnesses)
+
     average_fitness = mean(fitnesses)
     expected_value_func = lambda x: 1 if sigma == 0 else 1 + ((x - average_fitness) / (2 * sigma))
     sigma_sum = sum(expected_value_func(x) for x in fitnesses)
@@ -83,38 +97,34 @@ def ranked(population, **kwargs):
 
 def tournament(population, group_size, epsilon, **kwargs):
     def get_one(group):
-        r = random.random()
+        r = random()
 
         if r < epsilon:
-            return random.choice(group)
+            return choice(group)
 
         return max(group, key=attrgetter('fitness'))
+
+    try:
+        assert len(population) > 1
+    except AssertionError:
+        raise TooFewIndividuals
 
     while True:
         pool = list(population)
 
-        group_a = random.sample(pool, group_size)
+        group_a = sample(pool, group_size)
         a = get_one(group_a)
         pool.remove(a)
 
-        group_b = random.sample(pool, group_size)
+        group_b = sample(pool, group_size)
         b = get_one(group_b)
 
         yield (a, b)
 
 
-def eugenics(population, **kwargs):
-    """
-    Variation on deterministic uniform where the two best are paired,
-    then the next two,
-    and so on.
-    """
-    s = sorted(population, key=attrgetter('fitness'), reverse=True)
-
-    pairs = list()
-    n_pairs = len(population) / 2
-    while len(pairs) < n_pairs:
-        a = s.pop(0)
-        b = s.pop(0)
+def random_choice(population, **kwargs):
+    while True:
+        a = choice(population)
+        b = choice(population)
 
         yield (a, b)

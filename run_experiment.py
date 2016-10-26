@@ -24,10 +24,15 @@ def get_db(path):
     return Db(path, echo=False)
 
 
-def initialize_scenario(db_path: str, description: str, fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
-    scenario = Scenario(description=description, generations=neat_config.generations,
-                        population_size=neat_config.pop_size)
-    get_db(db_path).save_scenario(scenario)
+def initialize_scenario(db_path: str, description: str, fitness_f, pair_selection_f,
+                        neat_config: CPPNNEATConfig, ca_config: CAConfig):
+    db = get_db(db_path)
+    session = db.Session()
+    scenario = db.save_scenario(scenario=Scenario(
+        description=description,
+        generations=neat_config.generations,
+        population_size=neat_config.pop_size
+    ), session=session)
 
     initial_genotypes = list(create_initial_population(neat_config))
 
@@ -41,13 +46,16 @@ def initialize_scenario(db_path: str, description: str, fitness_f, neat_config: 
         generation=0,
         genotypes=initial_genotypes,
         fitness_f=fitness_f,
+        pair_selection_f=pair_selection_f,
         neat_config=neat_config,
         ca_config=ca_config,
     )
 
+    session.flush()
+
 
 def initialize_generation(db_path: str, scenario_id: int, generation: int, genotypes: List[Genome],
-                          fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
+                          pair_selection_f, fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
     from celery import group, chord
 
     grouped_tasks = group(handle_individual.s(
@@ -61,13 +69,15 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
         ca_config=ca_config,
     ) for i, genotype in enumerate(genotypes))
 
-    final_task = finalize_generation.subtask(args=(db_path, scenario_id, generation, fitness_f, neat_config, ca_config))
+    final_task = finalize_generation.subtask(
+        args=(db_path, scenario_id, generation, fitness_f, pair_selection_f, neat_config, ca_config)
+    )
 
     chord(grouped_tasks, final_task)()
 
 
 @shared_task(name='finalize_generation', bind=True)
-def finalize_generation(task, results, db_path: str, scenario_id: int, generation: int, fitness_f,
+def finalize_generation(task, results, db_path: str, scenario_id: int, generation: int, fitness_f, pair_selection_f,
                         neat_config: CPPNNEATConfig, ca_config: CAConfig):
     """
     'results' is return values of preceding group of tasks, can safely be ignored
@@ -96,8 +106,12 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         raise CompleteExtinctionException
 
     new_species, new_genotypes = neat_reproduction(
-        species=alive_species, pop_size=scenario.population_size, survival_threshold=neat_config.survival_threshold,
-        elitism=neat_config.elitism)
+        species=alive_species,
+        pop_size=scenario.population_size,
+        survival_threshold=neat_config.survival_threshold,
+        elitism=neat_config.elitism,
+        pair_selection_f=pair_selection_f,
+    )
 
     assert len(new_genotypes) == scenario.population_size
 
@@ -109,6 +123,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         generation=next_gen,
         genotypes=new_genotypes,
         fitness_f=fitness_f,
+        pair_selection_f=pair_selection_f,
         neat_config=neat_config,
         ca_config=ca_config,
     )
