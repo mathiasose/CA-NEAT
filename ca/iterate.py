@@ -1,7 +1,5 @@
-from ca.rule_tables import table_from_string
 from config import CAConfig
-from geometry.cell_grid import CellGrid2D
-from utils import random_bitstring
+from geometry.cell_grid import CellGrid
 
 
 def iterate_ca(grid, transition_f):
@@ -18,9 +16,13 @@ def n_iterations(initial_grid, transition_f, n):
     grid = initial_grid
 
     for _ in range(n):
-        grid = iterate_ca(grid, transition_f=transition_f)
+        new = iterate_ca(grid, transition_f=transition_f)
+        yield grid
 
-    return grid
+        if new == grid:
+            break
+        else:
+            grid = new
 
 
 def iterate_until_stable(initial_grid, transition_f, max_n):
@@ -37,38 +39,24 @@ def iterate_until_stable(initial_grid, transition_f, max_n):
     return grid
 
 
-def ca_develop(phenotype, ca_config: CAConfig):
-    from geometry.cell_grid import FiniteCellGrid2D
-    from utils import make_step_f
+def ca_develop(phenotype, ca_config: CAConfig, initial_grid: CellGrid):
+    from utils import create_state_normalization_rules
 
-    neighbourhood = ca_config.neighbourhood
-    alphabet = ca_config.alphabet
-    r = ca_config.r
     iterations = ca_config.iterations
 
-    initial = FiniteCellGrid2D(
-        cell_states=alphabet,
-        neighbourhood=neighbourhood,
-        x_range=(-r, r),
-        y_range=(-r, r),
-        values={(0, 0): 1},
-    )
+    state_normalization_rules = create_state_normalization_rules(states=ca_config.alphabet)
 
-    step = make_step_f(0.5)
+    def transition_f(inputs):
+        inputs = tuple(inputs)
 
-    def transition_f(args):
-        t = tuple(int(x) for x in args)
-        return step(phenotype.serial_activate(t)[0])
+        if all((x == initial_grid.dead_cell) for x in inputs):
+            return initial_grid.dead_cell
 
-    grid = n_iterations(initial_grid=initial, transition_f=transition_f, n=iterations)
+        inputs_float_values = tuple(state_normalization_rules.get_key_for_value(x) for x in inputs)
 
-    return grid
+        return state_normalization_rules.get(phenotype.serial_activate(inputs_float_values)[0])
 
+    grid_iterations = [initial_grid] + list(
+        n_iterations(initial_grid=initial_grid, transition_f=transition_f, n=iterations))
 
-if __name__ == '__main__':
-    grid = CellGrid2D(cell_states='01')
-    grid.set((0, 0), '1')
-    transition_f = lambda k: table_from_string(random_bitstring(2 ** 5), '01')[tuple(k)]
-
-    new = n_iterations(grid, transition_f, 5)
-    print(new)
+    return grid_iterations

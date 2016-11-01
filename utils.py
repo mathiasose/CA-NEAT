@@ -1,6 +1,7 @@
+from string import ascii_lowercase, ascii_uppercase
+
 import operator
 from random import choice, getrandbits, randrange
-from string import ascii_lowercase, ascii_uppercase
 
 bit_flip = lambda b: '0' if b == '1' else '1'
 
@@ -48,13 +49,33 @@ def pluck(collection, attr):
     return (getattr(item, attr) for item in collection)
 
 
-def make_step_f(threshold=0.5):
-    return lambda x: 1 if x > threshold else 0
-
-
 def is_even(n: int) -> int:
     return (n % 2) == 0
 
 
 def is_odd(n: int) -> int:
     return not is_even(n)
+
+
+class RangeDict(dict):
+    def get(self, key: float, default=None):
+        sorted_keys = sorted(self.keys(), reverse=True)
+        for k in sorted_keys:
+            if key > k:
+                return super().get(k)
+        else:
+            return super().get(sorted_keys[-1])
+
+    def get_key_for_value(self, value) -> float:
+        for k, v in self.items():
+            if v == value:
+                return k
+        else:
+            return None
+
+def create_state_normalization_rules(states, range=(-1, 1)):
+    lo, hi = range
+    n_states = len(states)
+    step = (hi - lo) / n_states
+
+    return RangeDict({lo + i * step: s for i, s in enumerate(states)})

@@ -26,3 +26,5 @@ class CAConfig:
     geometry = None
     iterations = None
     r = None
+    etc = {}
+    initial = None
