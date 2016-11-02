@@ -30,9 +30,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     )
 
     grid_iterations = ca_develop(phenotype, ca_config, initial_grid)
-    final_grid = grid_iterations[-1]
-
-    x = evaluate(final_grid, grid_cell=grid_cell, grid_r=r)
+    x = evaluate(grid_iterations[-1], grid_cell=grid_cell, grid_r=r)
 
     k = 5
     redistribute = lambda x: x * exp(k * x) / exp(k)
@@ -44,7 +42,7 @@ CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = ('0', '1')
 CA_CONFIG.neighbourhood = EXTENDED_VON_NEUMANN
 CA_CONFIG.r = 10
-CA_CONFIG.iterations = 25
+CA_CONFIG.iterations = 50
 CA_CONFIG.etc = {
     'checkerboard_grid_cell': 2,
 }

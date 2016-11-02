@@ -66,7 +66,7 @@ class CellGrid(defaultdict):
         raise NotImplementedError
 
     def get_live_cells(self):
-        return (cell for cell in self.values() if cell != self.dead_cell)
+        return ((coord, cell) for (coord, cell) in self.items() if cell != self.dead_cell)
 
 
 class CellGrid1D(CellGrid):
@@ -143,11 +143,18 @@ class CellGrid2D(CellGrid):
 
         return s
 
-    def get_rectangle(self, x_range, y_range):
+    def get_rectangle(self, x_range, y_range, f=lambda x: x):
         l, r = x_range
         t, b = y_range
 
-        return tuple(tuple(self.get((x, y)) for x in range(l, r)) for y in range(t, b))
+        return tuple(tuple(f(self.get((x, y))) for x in range(l, r)) for y in range(t, b))
+
+    def add_pattern_at_coord(self, pattern, coord):
+        start_x, start_y = coord
+
+        for y, row in enumerate(pattern):
+            for x, value in enumerate(row):
+                self.set((start_x + x, start_y + y), value)
 
 
 class FiniteCellGrid1D(CellGrid1D):
@@ -216,13 +223,20 @@ class FiniteCellGrid2D(CellGrid2D):
 
         return super().get(coord, default=default)
 
-    def get_whole(self):
-        return self.get_rectangle(self.x_range, self.y_range)
+    def get_whole(self, f=lambda x: x):
+        return self.get_rectangle(self.x_range, self.y_range, f=f)
+
+    def get_enumerated_whole(self):
+        enumeration = dict((v, k) for k, v in enumerate(self.cell_states))
+        return self.get_whole(f=enumeration.get)
 
     def empty_copy(self):
         new = self.__class__(cell_states=self.cell_states, x_range=self.x_range, y_range=self.y_range)
         new.neighbourhood = self.neighbourhood
         return new
+
+    def __hash__(self):
+        return hash(self.get_whole())
 
 
 if __name__ == '__main__':
