@@ -68,6 +68,9 @@ class CellGrid(defaultdict):
     def get_live_cells(self):
         return ((coord, cell) for (coord, cell) in self.items() if cell != self.dead_cell)
 
+    def __hash__(self):
+        return hash(self.get_live_cells())
+
 
 class CellGrid1D(CellGrid):
     dimensionality = 1
@@ -148,6 +151,10 @@ class CellGrid2D(CellGrid):
         t, b = y_range
 
         return tuple(tuple(f(self.get((x, y))) for x in range(l, r)) for y in range(t, b))
+
+    def get_enumerated_rectangle(self, x_range, y_range):
+        enumeration = dict((v, k) for k, v in enumerate(self.cell_states))
+        return self.get_rectangle(x_range, y_range, f=enumeration.get)
 
     def add_pattern_at_coord(self, pattern, coord):
         start_x, start_y = coord
@@ -234,9 +241,6 @@ class FiniteCellGrid2D(CellGrid2D):
         new = self.__class__(cell_states=self.cell_states, x_range=self.x_range, y_range=self.y_range)
         new.neighbourhood = self.neighbourhood
         return new
-
-    def __hash__(self):
-        return hash(self.get_whole())
 
 
 if __name__ == '__main__':

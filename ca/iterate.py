@@ -32,7 +32,7 @@ def n_iterations(initial_grid: CellGrid, transition_f, n: int) -> Iterator[CellG
             grid = new
 
 
-def ca_develop(network: FeedForwardNetwork, ca_config: CAConfig, initial_grid: CellGrid) -> List[CellGrid]:
+def ca_develop(network: FeedForwardNetwork, ca_config: CAConfig, initial_grid: CellGrid) -> Iterator[CellGrid]:
     from utils import create_state_normalization_rules
 
     state_normalization_rules = create_state_normalization_rules(states=ca_config.alphabet)
@@ -49,4 +49,7 @@ def ca_develop(network: FeedForwardNetwork, ca_config: CAConfig, initial_grid: C
 
     iterations = ca_config.iterations
 
-    return [initial_grid] + list(n_iterations(initial_grid, transition_f, iterations))
+    yield initial_grid
+
+    for grid in n_iterations(initial_grid, transition_f, iterations):
+        yield grid

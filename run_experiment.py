@@ -154,4 +154,9 @@ def handle_individual(db_path: str, scenario_id: int, generation: int, individua
 
     get_db(db_path).save_individual(individual)
 
-    return 'Scenario {}, generation {}, individual {}'.format(scenario_id, generation, individual_number)
+    return 'Scenario {}, generation {}, individual {}, fitness {}'.format(
+        scenario_id,
+        generation,
+        individual_number,
+        fitness
+    )

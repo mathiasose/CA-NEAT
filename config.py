@@ -20,11 +20,12 @@ class CPPNNEATConfig(Config):
         self.conn_gene_type = ConnectionGene
         self.activation_functions = tuple(activation_functions.functions.keys())  # all the possible functions
 
+
 class CAConfig:
     neighbourhood = None
     alphabet = None
     geometry = None
     iterations = None
     r = None
-    etc = {}
     initial = None
+    etc = {}
