@@ -24,7 +24,8 @@ def get_total_fitnesses_by_species_by_generation(db, scenario_id=1):
     return total_fitnesses_by_species_by_generation
 
 
-def is_species_stagnant(total_fitnesses_by_species_by_generation: List[dict], species_id: int, stagnation_limit: float):
+def is_species_stagnant(total_fitnesses_by_species_by_generation: List[dict], species_id: int, stagnation_limit: float,
+                        median_threshold: bool):
     """
     Traverse data structure from newest to latest generation to see if the total fitness for the given species
     is stagnant (or going down)
@@ -33,10 +34,11 @@ def is_species_stagnant(total_fitnesses_by_species_by_generation: List[dict], sp
 
     latest_gen = total_fitnesses_by_species_by_generation[-1]
 
-    median_fitness_for_generation = median(latest_gen.values())
+    if median_threshold:
+        median_fitness_for_generation = median(latest_gen.values())
 
-    if latest_gen[species_id] > median_fitness_for_generation:
-        return False
+        if latest_gen[species_id] > median_fitness_for_generation:
+            return False
 
     for gen_num in range(len(total_fitnesses_by_species_by_generation) - 1, 0, -1):
         first_gen_index = gen_num

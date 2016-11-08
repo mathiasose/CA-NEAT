@@ -7,6 +7,7 @@ class CPPNNEATConfig(Config):
     survival_threshold = None
     elitism = 0
     initial_hidden_nodes = 0
+    stagnation_median_threshold = True
 
     def __init__(self, **kwargs):
         from neat import activation_functions

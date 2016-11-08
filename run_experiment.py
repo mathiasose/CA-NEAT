@@ -99,8 +99,13 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     if (not neat_config.stagnation_limit) or (generation < neat_config.stagnation_limit):
         alive_species = species
     else:
-        fitnesses = get_total_fitnesses_by_species_by_generation(db)
-        alive_species = [s for s in species if not is_species_stagnant(fitnesses, s.ID, neat_config.stagnation_limit)]
+        total_fitnesses_by_species_by_generation = get_total_fitnesses_by_species_by_generation(db)
+        alive_species = [s for s in species if not is_species_stagnant(
+            total_fitnesses_by_species_by_generation=total_fitnesses_by_species_by_generation,
+            species_id=s.ID,
+            stagnation_limit=neat_config.stagnation_limit,
+            median_threshold=neat_config.stagnation_median_threshold,
+        )]
 
     if not alive_species:
         raise CompleteExtinctionException
@@ -115,7 +120,11 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
 
     assert len(new_genotypes) == scenario.population_size
 
-    speciate(new_genotypes, compatibility_threshold=neat_config.compatibility_threshold, existing_species=new_species)
+    species = speciate(
+        new_genotypes,
+        compatibility_threshold=neat_config.compatibility_threshold,
+        existing_species=new_species
+    )
 
     initialize_generation(
         db_path=db_path,
@@ -128,7 +137,12 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         ca_config=ca_config,
     )
 
-    logging.info('Finished generation {} of scenario {}'.format(generation, scenario_id))
+    logging.info('Finished generation {gen} of scenario {scen}: {pop} individuals / {species} species'.format(
+        gen=generation,
+        scen=scenario_id,
+        pop=len(new_genotypes),
+        species=len(species),
+    ))
     return generation
 
 
