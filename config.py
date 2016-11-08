@@ -6,6 +6,7 @@ class CPPNNEATConfig(Config):
     stagnation_limit = None
     survival_threshold = None
     elitism = 0
+    initial_hidden_nodes = 0
 
     def __init__(self, **kwargs):
         from neat import activation_functions

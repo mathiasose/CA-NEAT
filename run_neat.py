@@ -1,18 +1,24 @@
 import math
+import random
 from typing import List
 from uuid import uuid4
 
-import random
 from neat.genome import Genome
 from neat.species import Species
 
+from config import CPPNNEATConfig
 from selection import TooFewIndividuals, random_choice
 
 
-def create_initial_population(neat_config):
+def create_initial_population(neat_config: CPPNNEATConfig):
     for _ in range(neat_config.pop_size):
         g_id = uuid4()
         g = neat_config.genotype.create_unconnected(g_id, neat_config)
+
+        hidden_nodes = neat_config.initial_hidden_nodes
+        if hidden_nodes:
+            g.add_hidden_nodes(hidden_nodes)
+
         g.connect_full()
         yield g
 
