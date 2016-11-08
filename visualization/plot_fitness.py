@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
 
 from database import Db
 from utils import pluck
-
-INTERVAL = 5
 
 
 def get_db(path):
@@ -16,29 +15,49 @@ def plot_fitnesses_over_generations(db_path, title, interval=None):
     session = db.Session()
     scenario = db.get_scenario(1, session=session)
 
+    assert scenario
+
     n_generations = scenario.generations
     last_generation = (n_generations - 1)
-    generation_fitnesses = {}
 
     plt.ion()
+    generation_fitnesses = {}
+    n_species = {}
 
     def draw():
         plt.clf()
-        plt.ylabel('fitness')
-        plt.xlabel('generation')
-        plt.axis([0, n_generations, -0.1, 1.1])
-        plt.boxplot(
-            x=tuple(generation_fitnesses.get(n, []) for n in range(0, n_generations)),
-            labels=range(0, n_generations),
-        )
+        fig = plt.gcf()
+        ax1 = plt.gca()
+
         plt.title(title)
-        plt.gcf().canvas.set_window_title(os.path.basename(db_path))
+        fig.canvas.set_window_title(os.path.basename(db_path))
+
+        ax1.axis([0, n_generations, -0.1, 1.1])
+        ax1.boxplot(
+            x=tuple(generation_fitnesses.get(n, []) for n in range(0, n_generations)),
+            positions=range(0, n_generations),
+        )
+        ax1.set_ylabel('fitness')
+        ax1.set_xlabel('generation')
+
+        ax2 = ax1.twinx()
+        ax2.axis([0, n_generations, 0, max(n_species.values()) + 1])
+        ax2.plot(
+            range(0, n_generations),
+            tuple(n_species.get(n, 0) for n in range(0, n_generations)),
+            'go'
+        )
+        ax2.set_ylabel('number of species')
+
+        return fig
 
     done = -1
 
     while True:
         for generation_n in range(done + 1, n_generations):
             generation = db.get_generation(scenario_id=1, generation=generation_n)
+            genotypes = pluck(generation, 'genotype')
+            n_species[generation_n] = len(set(gt.species_id for gt in genotypes))
 
             if generation.count() < scenario.population_size:
                 print('Generation {} at {}/{} individuals completed'.format(
@@ -48,12 +67,14 @@ def plot_fitnesses_over_generations(db_path, title, interval=None):
                 ))
                 break
             else:
-                generation_fitnesses[generation_n] = pluck(generation, 'fitness')
+                print('Generation {}: {} species'.format(generation_n, n_species[generation_n]))
+                generation_fitnesses[generation_n] = tuple(pluck(generation, 'fitness'))
                 done = generation_n
 
         draw()
 
         if done == last_generation:
+            print('Finish after generation {}'.format(last_generation))
             break
 
         elif interval:
@@ -65,5 +86,6 @@ def plot_fitnesses_over_generations(db_path, title, interval=None):
 
 
 if __name__ == '__main__':
-    file = 'replicate_swiss_flag/' + '2016-11-03 01:16:41.199550.db'
-    plot_fitnesses_over_generations('sqlite:///db/{}'.format(file), interval=INTERVAL, title='')
+    file = 'problems/results/' + 'replicate_twocolor/' + '2016-11-07 11:29:19.960024.db'
+    db_path = 'sqlite:///{}'.format(file)
+    plot_fitnesses_over_generations(db_path, interval=30, title='')
