@@ -10,7 +10,7 @@ def get_db(path):
     return Db(path, echo=False)
 
 
-def plot_fitnesses_over_generations(db_path, title, interval=None):
+def plot_fitnesses_over_generations(db_path, title=None, interval=None):
     db = get_db(db_path)
     session = db.Session()
     scenario = db.get_scenario(1, session=session)
@@ -29,7 +29,7 @@ def plot_fitnesses_over_generations(db_path, title, interval=None):
         fig = plt.gcf()
         ax1 = plt.gca()
 
-        plt.title(title)
+        plt.title(title or scenario.description)
         fig.canvas.set_window_title(os.path.basename(db_path))
 
         ax1.axis([0, n_generations, -0.1, 1.1])
@@ -86,6 +86,9 @@ def plot_fitnesses_over_generations(db_path, title, interval=None):
 
 
 if __name__ == '__main__':
-    file = 'problems/results/' + 'replicate_twocolor/' + '2016-11-07 11:29:19.960024.db'
+    THIS_FILE = os.path.abspath(__file__)
+    RESULTS_DIR = os.path.abspath(os.path.join(THIS_FILE, '..', '..', 'problems', 'results'))
+    file = os.path.join(RESULTS_DIR, 'replicate_twocolor/', '2016-11-07 23:33:03.662880.db')
     db_path = 'sqlite:///{}'.format(file)
-    plot_fitnesses_over_generations(db_path, interval=30, title='')
+    print(db_path)
+    plot_fitnesses_over_generations(db_path, interval=300)
