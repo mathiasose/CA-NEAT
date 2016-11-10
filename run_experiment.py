@@ -10,6 +10,8 @@ from sqlalchemy.sql.functions import now
 from add_dill import add_dill
 from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
+from run_neat import create_initial_population, neat_reproduction, sort_into_species, speciate
+from stagnation import get_total_fitnesses_by_species_by_generation, is_species_stagnant
 
 add_dill()
 
@@ -78,8 +80,6 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     scenario = db.get_scenario(scenario_id)
     population = db.get_generation(scenario_id, generation)
 
-    assert population.count() == scenario.population_size
-
     next_gen = generation + 1
 
     if next_gen == scenario.generations:
@@ -109,8 +109,6 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         elitism=neat_config.elitism,
         pair_selection_f=pair_selection_f,
     )
-
-    assert len(new_genotypes) == scenario.population_size
 
     species = speciate(
         new_genotypes,

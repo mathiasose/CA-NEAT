@@ -23,7 +23,7 @@ def create_initial_population(neat_config: CPPNNEATConfig):
         yield g
 
 
-def speciate(genotypes: List[Genome], compatibility_threshold, existing_species=None):
+def speciate(genotypes: List[Genome], compatibility_threshold: float, existing_species=None):
     species = []
     if isinstance(existing_species, list):
         species += existing_species
@@ -99,15 +99,6 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair
     norm = pop_size / total_spawn
     spawn_amounts = [int(round(n * norm)) for n in spawn_amounts]
 
-    # make adjustments until exactly pop_size
-    i = 0
-    while sum(spawn_amounts) != pop_size:
-        if sum(spawn_amounts) < pop_size:
-            spawn_amounts[i] = (spawn_amounts[i] + 1)
-        else:
-            spawn_amounts[i] = max(spawn_amounts[i] - 1, elitism)
-
-        i = (i + 1) % len(spawn_amounts)
 
     new_population = []
     new_species = []
