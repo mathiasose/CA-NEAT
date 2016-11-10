@@ -14,7 +14,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     from patterns.replicate_pattern import count_pattern
     from geometry.cell_grid import CellGrid2D
 
-    wanted_occurences = 3
+    wanted_occurrences = 3
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
@@ -36,15 +36,15 @@ def fitness_f(phenotype, ca_config: CAConfig):
 
         count = count_pattern(grid, pattern)
 
-        if count >= wanted_occurences:
+        if count >= wanted_occurrences:
             best = 1.0
             break
         else:
-            best = max(best, count / wanted_occurences)
+            best = max(best, count / wanted_occurrences)
 
     if best == 0.0:
         last = grid_iterations[-1]
-        consolation_prize = (1 / wanted_occurences) * 0.9
+        consolation_prize = (1 / wanted_occurrences) * 0.9
 
         if set(val for _, val in last.get_live_cells()) == set(alphabet):
             best += consolation_prize * 0.5

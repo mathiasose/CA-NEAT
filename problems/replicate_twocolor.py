@@ -14,7 +14,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     from geometry.cell_grid import CellGrid2D
     from statistics import mean
 
-    wanted_occurences = 3
+    wanted_occurrences = 3
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
@@ -39,7 +39,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
         if not partial_matches:
             continue
 
-        best = max(best, mean(partial_matches) * min(1.0, len(partial_matches) / wanted_occurences))
+        best = max(best, mean(partial_matches) * min(1.0, len(partial_matches) / wanted_occurrences))
 
         if best >= 1.0:
             best = 1.0
