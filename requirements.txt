@@ -3,3 +3,7 @@ celery==3.1.23
 dill==0.2.5
 git+ssh://git@github.com/mathiasose/billiard.git@dill
 neat-python==0.8
+matplotlib==1.5.3
+seaborn==0.7.1
+pushbullet.py==0.10.0
+graphviz==0.5.1
