@@ -9,19 +9,9 @@ from sqlalchemy.sql.functions import now
 
 from add_dill import add_dill
 from config import CAConfig, CPPNNEATConfig
-from database import Db, Individual, Scenario
-from run_neat import (create_initial_population, neat_reproduction,
-                      sort_into_species, speciate)
-from stagnation import (get_total_fitnesses_by_species_by_generation,
-                        is_species_stagnant)
-
-WAIT = 5
+from database import Individual, Scenario, get_db
 
 add_dill()
-
-
-def get_db(path):
-    return Db(path, echo=False)
 
 
 def initialize_scenario(db_path: str, description: str, fitness_f, pair_selection_f,
@@ -33,6 +23,8 @@ def initialize_scenario(db_path: str, description: str, fitness_f, pair_selectio
         generations=neat_config.generations,
         population_size=neat_config.pop_size
     ), session=session)
+
+    assert scenario
 
     initial_genotypes = list(create_initial_population(neat_config))
 

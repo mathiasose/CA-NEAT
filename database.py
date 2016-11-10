@@ -42,6 +42,8 @@ class Db:
         session.add(scenario)
         session.commit()
 
+        return scenario
+
     def save_individual(self, individual, session=None):
         if session is None:
             session = self.Session()
@@ -49,6 +51,8 @@ class Db:
         session.add(individual)
 
         session.commit()
+
+        return individual
 
     def get_scenario(self, scenario_id, session=None):
         if session is None:
@@ -69,3 +73,7 @@ class Db:
 
         return self.get_individuals(scenario_id, session) \
             .filter(Individual.generation == generation)
+
+
+def get_db(path):
+    return Db(path, echo=False)

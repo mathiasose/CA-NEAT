@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
+from database import get_db
 from geometry.neighbourhoods import VON_NEUMANN
 from run_experiment import initialize_scenario
 from selection import sigma_scaled

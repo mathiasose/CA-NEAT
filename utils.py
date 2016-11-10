@@ -1,7 +1,12 @@
+import os
 from string import ascii_lowercase, ascii_uppercase
 
 import operator
 from random import choice, getrandbits, randrange
+
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(__file__, '..')
+)
 
 bit_flip = lambda b: '0' if b == '1' else '1'
 
