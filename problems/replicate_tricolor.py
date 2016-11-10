@@ -10,17 +10,19 @@ from visualization.plot_fitness import plot_fitnesses_over_generations
 
 
 def fitness_f(phenotype, ca_config: CAConfig):
-    from ca.iterate import ca_develop
+    from ca.iterate import n_iterations
     from patterns.replicate_pattern import find_pattern_partial_matches
     from geometry.cell_grid import CellGrid2D
     from statistics import mean
-
-    wanted_occurences = 3
+    from utils import create_state_normalization_rules
+    from operator import itemgetter
+    from neat.nn import FeedForwardNetwork
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
-
     pattern = ca_config.etc['pattern']
+    wanted_occurrences = ca_config.etc['wanted_occurrences']
+
     initial_grid = CellGrid2D(
         cell_states=alphabet,
         neighbourhood=neighbourhood,
@@ -28,11 +30,34 @@ def fitness_f(phenotype, ca_config: CAConfig):
 
     initial_grid.add_pattern_at_coord(pattern, (0, 0))
 
-    grid_iterations = tuple(ca_develop(phenotype, ca_config, initial_grid))
+    def ca_develop(network: FeedForwardNetwork):
+        state_normalization_rules = create_state_normalization_rules(states=alphabet)
+
+        def transition_f(inputs):
+            inputs = tuple(inputs)
+
+            if all((x == initial_grid.dead_cell) for x in inputs):
+                return initial_grid.dead_cell
+
+            inputs_float_values = tuple(state_normalization_rules.get_key_for_value(x) for x in inputs)
+
+            outputs = network.serial_activate(inputs_float_values)
+
+            return max(zip(alphabet, outputs), key=itemgetter(1))[0]
+
+        iterations = ca_config.iterations
+
+        yield initial_grid
+
+        for grid in n_iterations(initial_grid, transition_f, iterations):
+            yield grid
+
+    grid_iterations = ca_develop(phenotype)
 
     best = 0.0
     for i, grid in enumerate(grid_iterations):
         if i == 0:
+            # the initial state should not be evaluated and contribute to the score
             continue
 
         partial_matches = find_pattern_partial_matches(grid, pattern)
@@ -40,10 +65,17 @@ def fitness_f(phenotype, ca_config: CAConfig):
         if not partial_matches:
             continue
 
-        best = max(best, mean(partial_matches) * min(1.0, len(partial_matches) / wanted_occurences))
+        best_n_matches = sorted(partial_matches, reverse=True)[:wanted_occurrences]
+
+        # to encourage perfect replicas we penalize imperfect replicas a little bit extra
+        # so that the difference between perfect and near-perfect
+        penalty_factor = 0.9
+        best_n_matches = [(1.0 if score >= 1.0 else score * penalty_factor) for score in best_n_matches]
+
+        avg = mean(best_n_matches)
+        best = max(best, avg)
 
         if best >= 1.0:
-            best = 1.0
             break
 
     return best
@@ -63,17 +95,19 @@ CA_CONFIG.etc = {
         (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
         (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
         (' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-    )
+    ),
+    'wanted_occurrences': 3,
 }
 
 NEAT_CONFIG = CPPNNEATConfig()
-NEAT_CONFIG.pop_size = 100
-NEAT_CONFIG.generations = 50
+NEAT_CONFIG.pop_size = 200
+NEAT_CONFIG.generations = 200
 NEAT_CONFIG.stagnation_limit = 10
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
-NEAT_CONFIG.initial_hidden_nodes = 5
+NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
+NEAT_CONFIG.initial_hidden_nodes = 1
 NEAT_CONFIG.weight_stdev = 1.0
-NEAT_CONFIG.compatibility_threshold = 0.85
+NEAT_CONFIG.compatibility_threshold = 0.75
 NEAT_CONFIG.prob_add_conn = 0.458
 NEAT_CONFIG.prob_add_node = 0.185
 NEAT_CONFIG.prob_delete_conn = 0.246
@@ -93,7 +127,7 @@ NEAT_CONFIG.excess_coefficient = 1.0
 NEAT_CONFIG.disjoint_coefficient = 1.0
 NEAT_CONFIG.weight_coefficient = 0.4
 NEAT_CONFIG.elitism = 2
-NEAT_CONFIG.survival_threshold = 0.4
+NEAT_CONFIG.survival_threshold = 0.6
 
 if __name__ == '__main__':
     THIS_FILE = os.path.abspath(__file__)
@@ -103,18 +137,19 @@ if __name__ == '__main__':
         os.makedirs(RESULTS_DIR)
 
     DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
-    print(DB_PATH)
 
     DESCRIPTION = '"Tricolor flag replication"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,
         gens=NEAT_CONFIG.generations
     )
-    initialize_scenario(
-        db_path=DB_PATH,
-        description=DESCRIPTION,
-        fitness_f=fitness_f,
-        pair_selection_f=sigma_scaled,
-        neat_config=NEAT_CONFIG,
-        ca_config=CA_CONFIG,
-    )
-    plot_fitnesses_over_generations(DB_PATH, title=DESCRIPTION, interval=300)
+    for _ in range(1):
+        initialize_scenario(
+            db_path=DB_PATH,
+            description=DESCRIPTION,
+            fitness_f=fitness_f,
+            pair_selection_f=sigma_scaled,
+            neat_config=NEAT_CONFIG,
+            ca_config=CA_CONFIG,
+        )
+
+    plot_fitnesses_over_generations(get_db(DB_PATH), scenario_id=1, title=DESCRIPTION, interval=300)
