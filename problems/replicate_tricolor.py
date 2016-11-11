@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Tuple, T
 
 from config import CAConfig, CPPNNEATConfig
 from database import get_db
@@ -22,6 +23,8 @@ def fitness_f(phenotype, ca_config: CAConfig):
     alphabet = ca_config.alphabet
     pattern = ca_config.etc['pattern']
     wanted_occurrences = ca_config.etc['wanted_occurrences']
+    iterations = ca_config.iterations
+    state_normalization_rules = create_state_normalization_rules(states=alphabet)
 
     initial_grid = CellGrid2D(
         cell_states=alphabet,
@@ -31,21 +34,15 @@ def fitness_f(phenotype, ca_config: CAConfig):
     initial_grid.add_pattern_at_coord(pattern, (0, 0))
 
     def ca_develop(network: FeedForwardNetwork):
-        state_normalization_rules = create_state_normalization_rules(states=alphabet)
-
-        def transition_f(inputs):
-            inputs = tuple(inputs)
-
-            if all((x == initial_grid.dead_cell) for x in inputs):
+        def transition_f(inputs_discrete_values: Tuple[T]) -> T:
+            if all((x == initial_grid.dead_cell) for x in inputs_discrete_values):
                 return initial_grid.dead_cell
 
-            inputs_float_values = tuple(state_normalization_rules.get_key_for_value(x) for x in inputs)
+            inputs_float_values = tuple(state_normalization_rules[x] for x in inputs_discrete_values)
 
             outputs = network.serial_activate(inputs_float_values)
 
             return max(zip(alphabet, outputs), key=itemgetter(1))[0]
-
-        iterations = ca_config.iterations
 
         yield initial_grid
 
@@ -68,7 +65,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
         best_n_matches = sorted(partial_matches, reverse=True)[:wanted_occurrences]
 
         # to encourage perfect replicas we penalize imperfect replicas a little bit extra
-        # so that the difference between perfect and near-perfect
+        # so that the difference between perfect and near-perfect is greater
         penalty_factor = 0.9
         best_n_matches = [(1.0 if score >= 1.0 else score * penalty_factor) for score in best_n_matches]
 
@@ -102,12 +99,12 @@ CA_CONFIG.etc = {
 NEAT_CONFIG = CPPNNEATConfig()
 NEAT_CONFIG.pop_size = 200
 NEAT_CONFIG.generations = 200
-NEAT_CONFIG.stagnation_limit = 10
+NEAT_CONFIG.stagnation_limit = 15
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
-NEAT_CONFIG.initial_hidden_nodes = 1
+NEAT_CONFIG.initial_hidden_nodes = 0
 NEAT_CONFIG.weight_stdev = 1.0
-NEAT_CONFIG.compatibility_threshold = 0.75
+NEAT_CONFIG.compatibility_threshold = 0.85
 NEAT_CONFIG.prob_add_conn = 0.458
 NEAT_CONFIG.prob_add_node = 0.185
 NEAT_CONFIG.prob_delete_conn = 0.246
@@ -126,8 +123,10 @@ NEAT_CONFIG.min_weight = -30
 NEAT_CONFIG.excess_coefficient = 1.0
 NEAT_CONFIG.disjoint_coefficient = 1.0
 NEAT_CONFIG.weight_coefficient = 0.4
-NEAT_CONFIG.elitism = 2
-NEAT_CONFIG.survival_threshold = 0.6
+NEAT_CONFIG.elitism = 1
+NEAT_CONFIG.survival_threshold = 0.5
+
+PAIR_SELECTION_F = sigma_scaled
 
 if __name__ == '__main__':
     THIS_FILE = os.path.abspath(__file__)
@@ -147,7 +146,7 @@ if __name__ == '__main__':
             db_path=DB_PATH,
             description=DESCRIPTION,
             fitness_f=fitness_f,
-            pair_selection_f=sigma_scaled,
+            pair_selection_f=PAIR_SELECTION_F,
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,
         )

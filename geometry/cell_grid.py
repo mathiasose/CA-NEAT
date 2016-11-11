@@ -41,8 +41,7 @@ class CellGrid(defaultdict):
         super().__setitem__(coord, value)
 
     def get_neighbourhood_values(self, coord):
-        for direction in self.neighbourhood:
-            yield self.get(tuple_add(coord, direction))
+        return tuple(self.get(tuple_add(coord, direction)) for direction in self.neighbourhood)
 
     def empty_copy(self):
         new = self.__class__(cell_states=self.cell_states)
@@ -146,11 +145,14 @@ class CellGrid2D(CellGrid):
 
         return s
 
-    def get_rectangle(self, x_range, y_range, f=lambda x: x):
+    def get_rectangle(self, x_range, y_range, f=None):
         l, r = x_range
         t, b = y_range
 
-        return tuple(tuple(f(self.get((x, y))) for x in range(l, r)) for y in range(t, b))
+        if f:
+            return tuple(tuple(f(self.get((x, y))) for x in range(l, r)) for y in range(t, b))
+        else:
+            return tuple(tuple(self.get((x, y)) for x in range(l, r)) for y in range(t, b))
 
     def get_enumerated_rectangle(self, x_range, y_range):
         enumeration = dict((v, k) for k, v in enumerate(self.cell_states))

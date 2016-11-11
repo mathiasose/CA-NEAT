@@ -62,25 +62,9 @@ def is_odd(n: int) -> int:
     return not is_even(n)
 
 
-class RangeDict(dict):
-    def get(self, key: float, default=None):
-        sorted_keys = sorted(self.keys(), reverse=True)
-        for k in sorted_keys:
-            if key > k:
-                return super().get(k)
-        else:
-            return super().get(sorted_keys[-1])
-
-    def get_key_for_value(self, value) -> float:
-        for k, v in self.items():
-            if v == value:
-                return k
-        else:
-            return None
-
-def create_state_normalization_rules(states, range=(-1, 1)):
+def create_state_normalization_rules(states, range=(-1, 1)) -> dict:
     lo, hi = range
     n_states = len(states)
     step = (hi - lo) / n_states
 
-    return RangeDict({lo + i * step: s for i, s in enumerate(states)})
+    return {s: lo + i * step for i, s in enumerate(states)}

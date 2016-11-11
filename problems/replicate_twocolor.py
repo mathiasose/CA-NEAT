@@ -70,8 +70,9 @@ NEAT_CONFIG.pop_size = 100
 NEAT_CONFIG.generations = 200
 NEAT_CONFIG.stagnation_limit = 10
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
+NEAT_CONFIG.initial_hidden_nodes = 0
 NEAT_CONFIG.weight_stdev = 1.0
-NEAT_CONFIG.compatibility_threshold = 0.75
+NEAT_CONFIG.compatibility_threshold = 0.85
 NEAT_CONFIG.prob_add_conn = 0.988
 NEAT_CONFIG.prob_add_node = 0.185
 NEAT_CONFIG.prob_delete_conn = 0.146
@@ -101,7 +102,6 @@ if __name__ == '__main__':
         os.makedirs(RESULTS_DIR)
 
     DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
-    print(DB_PATH)
 
     DESCRIPTION = '"Two-color flag replication"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,

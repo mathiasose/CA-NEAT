@@ -25,31 +25,9 @@ def n_iterations(initial_grid: CellGrid, transition_f, n: int) -> Iterator[CellG
         new = iterate_ca(grid, transition_f=transition_f)
 
         if new in seen:
+            # found a cycle
             return
         else:
             yield new
             seen.add(new)
             grid = new
-
-
-def ca_develop(network: FeedForwardNetwork, ca_config: CAConfig, initial_grid: CellGrid) -> Iterator[CellGrid]:
-    from utils import create_state_normalization_rules
-
-    state_normalization_rules = create_state_normalization_rules(states=ca_config.alphabet)
-
-    def transition_f(inputs):
-        inputs = tuple(inputs)
-
-        if all((x == initial_grid.dead_cell) for x in inputs):
-            return initial_grid.dead_cell
-
-        inputs_float_values = tuple(state_normalization_rules.get_key_for_value(x) for x in inputs)
-
-        return state_normalization_rules.get(network.serial_activate(inputs_float_values)[0])
-
-    iterations = ca_config.iterations
-
-    yield initial_grid
-
-    for grid in n_iterations(initial_grid, transition_f, iterations):
-        yield grid

@@ -1,13 +1,10 @@
 import os
+from tkinter import TclError
 
 import matplotlib.pyplot as plt
 
-from database import Db
+from database import Db, get_db
 from utils import pluck, PROJECT_ROOT
-
-
-def get_db(path):
-    return Db(path, echo=False)
 
 
 def plot_fitnesses_over_generations(db: Db, scenario_id: int, title=None, interval=None, action='show'):
@@ -34,6 +31,7 @@ def plot_fitnesses_over_generations(db: Db, scenario_id: int, title=None, interv
         ax1.boxplot(
             x=tuple(generation_fitnesses.get(n, []) for n in range(0, n_generations)),
             positions=range(0, n_generations),
+            labels=tuple(i if i % 10 == 0 else '' for i in range(0, n_generations)),
         )
         ax1.set_ylabel('fitness')
         ax1.set_xlabel('generation')
@@ -76,9 +74,8 @@ def plot_fitnesses_over_generations(db: Db, scenario_id: int, title=None, interv
 
 
 if __name__ == '__main__':
-    problem_dir = 'replicate_tricolor/'
-    db_file = '2016-11-09 20:17:10.035768.db'
-    scenario_id = 3
+    problem_dir = 'replicate_norwegian_flag/'
+    db_file = '2016-11-11 13:53:27.835483.db'
 
     THIS_FILE = os.path.abspath(__file__)
     RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))
@@ -86,4 +83,9 @@ if __name__ == '__main__':
     db_path = 'sqlite:///{}'.format(file)
 
     print(db_path)
-    plot_fitnesses_over_generations(get_db(db_path), scenario_id=scenario_id, interval=300)
+    db = get_db(db_path)
+    for scenario in db.get_scenarios():
+        try:
+            plot_fitnesses_over_generations(db, scenario_id=scenario.id, interval=300)
+        except TclError:
+            pass

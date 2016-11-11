@@ -1,6 +1,6 @@
 import math
 import random
-from typing import List
+from typing import List, Tuple, Iterator
 from uuid import uuid4
 
 from neat.genome import Genome
@@ -10,7 +10,7 @@ from config import CPPNNEATConfig
 from selection import TooFewIndividuals, random_choice
 
 
-def create_initial_population(neat_config: CPPNNEATConfig):
+def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
     for _ in range(neat_config.pop_size):
         g_id = uuid4()
         g = neat_config.genotype.create_unconnected(g_id, neat_config)
@@ -23,7 +23,7 @@ def create_initial_population(neat_config: CPPNNEATConfig):
         yield g
 
 
-def speciate(genotypes: List[Genome], compatibility_threshold: float, existing_species=None):
+def speciate(genotypes: List[Genome], compatibility_threshold: float, existing_species=None) -> List[Species]:
     species = []
     if isinstance(existing_species, list):
         species += existing_species
@@ -55,7 +55,7 @@ def speciate(genotypes: List[Genome], compatibility_threshold: float, existing_s
     return species
 
 
-def sort_into_species(genotypes: List[Genome]):
+def sort_into_species(genotypes: List[Genome]) -> List[Species]:
     species = {}
     for gt in genotypes:
         species_id = gt.species_id
@@ -70,7 +70,8 @@ def sort_into_species(genotypes: List[Genome]):
     return species.values()
 
 
-def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair_selection_f, elitism=0, **kwargs):
+def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair_selection_f, elitism=0, **kwargs) \
+        -> Tuple[List[Species], List[Genome]]:
     species_fitness = []
     avg_adjusted_fitness = 0.0
     for s in species:
@@ -98,7 +99,6 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair
     total_spawn = sum(spawn_amounts)
     norm = pop_size / total_spawn
     spawn_amounts = [int(round(n * norm)) for n in spawn_amounts]
-
 
     new_population = []
     new_species = []

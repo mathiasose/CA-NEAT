@@ -54,6 +54,12 @@ class Db:
 
         return individual
 
+    def get_scenarios(self, session=None):
+        if session is None:
+            session = self.Session()
+
+        return session.query(Scenario).all()
+
     def get_scenario(self, scenario_id, session=None):
         if session is None:
             session = self.Session()
