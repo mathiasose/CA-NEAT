@@ -91,7 +91,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     if (not neat_config.stagnation_limit) or (generation < neat_config.stagnation_limit):
         alive_species = species
     else:
-        total_fitnesses_by_species_by_generation = get_total_fitnesses_by_species_by_generation(db)
+        total_fitnesses_by_species_by_generation = get_total_fitnesses_by_species_by_generation(db, scenario_id)
         alive_species = [s for s in species if not is_species_stagnant(
             total_fitnesses_by_species_by_generation=total_fitnesses_by_species_by_generation,
             species_id=s.ID,

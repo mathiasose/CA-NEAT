@@ -1,10 +1,13 @@
-from collections import defaultdict
 from statistics import median
 from typing import List
 from uuid import UUID
 
+from collections import defaultdict
 
-def get_total_fitnesses_by_species_by_generation(db, scenario_id=1):
+from database import Db
+
+
+def get_total_fitnesses_by_species_by_generation(db: Db, scenario_id: int):
     """
     Create a data structure holding information about total fitness for each species for each generation
     """
