@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from typing import Tuple, T
 
 from config import CAConfig, CPPNNEATConfig
 from database import get_db
@@ -18,6 +17,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     from utils import create_state_normalization_rules
     from operator import itemgetter
     from neat.nn import FeedForwardNetwork
+    from typing import T, Tuple
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet

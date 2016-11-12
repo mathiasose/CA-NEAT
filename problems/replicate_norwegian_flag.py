@@ -1,13 +1,10 @@
 import os
 from datetime import datetime
-from typing import Tuple, T
 
 from config import CAConfig, CPPNNEATConfig
-from database import get_db
 from geometry.neighbourhoods import VON_NEUMANN
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
-from visualization.plot_fitness import plot_fitnesses_over_generations
 
 
 def fitness_f(phenotype, ca_config: CAConfig):
@@ -18,6 +15,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     from utils import create_state_normalization_rules
     from operator import itemgetter
     from neat.nn import FeedForwardNetwork
+    from typing import Tuple, T
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
@@ -151,5 +149,3 @@ if __name__ == '__main__':
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,
         )
-
-    plot_fitnesses_over_generations(get_db(DB_PATH), scenario_id=1, title=DESCRIPTION, interval=300)

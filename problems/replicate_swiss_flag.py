@@ -1,6 +1,5 @@
-from datetime import datetime
-
 import os
+from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
