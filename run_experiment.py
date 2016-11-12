@@ -71,16 +71,16 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
 
 
 @shared_task(name='finalize_generation', bind=True)
-def finalize_generation(task, results, db_path: str, scenario_id: int, generation: int, fitness_f, pair_selection_f,
+def finalize_generation(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f, pair_selection_f,
                         neat_config: CPPNNEATConfig, ca_config: CAConfig):
     """
     'results' is return values of preceding group of tasks, can safely be ignored
     """
     db = get_db(db_path)
     scenario = db.get_scenario(scenario_id)
-    population = db.get_generation(scenario_id, generation)
+    population = db.get_generation(scenario_id, generation_n)
 
-    next_gen = generation + 1
+    next_gen = generation_n + 1
 
     if next_gen == scenario.generations:
         logging.info('Scenario {} finished after {} generations'.format(scenario_id, scenario.generations))
@@ -88,14 +88,19 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
 
     species = sort_into_species([individual.genotype for individual in population])
 
-    if (not neat_config.stagnation_limit) or (generation < neat_config.stagnation_limit):
+    stagnation_limit = neat_config.stagnation_limit
+    if (not stagnation_limit) or (generation_n < stagnation_limit):
         alive_species = species
     else:
-        total_fitnesses_by_species_by_generation = get_total_fitnesses_by_species_by_generation(db, scenario_id)
+        total_fitnesses_by_species_by_generation = get_total_fitnesses_by_species_by_generation(
+            db=db,
+            scenario_id=scenario_id,
+            generation_range=(generation_n - stagnation_limit, next_gen),
+        )
         alive_species = [s for s in species if not is_species_stagnant(
             total_fitnesses_by_species_by_generation=total_fitnesses_by_species_by_generation,
             species_id=s.ID,
-            stagnation_limit=neat_config.stagnation_limit,
+            stagnation_limit=stagnation_limit,
             median_threshold=neat_config.stagnation_median_threshold,
         )]
 
@@ -128,12 +133,12 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     )
 
     logging.info('Finished generation {gen} of scenario {scen}: {pop} individuals / {species} species'.format(
-        gen=generation,
+        gen=generation_n,
         scen=scenario_id,
         pop=len(new_genotypes),
         species=len(species),
     ))
-    return generation
+    return generation_n
 
 
 @shared_task(name='handle_individual')

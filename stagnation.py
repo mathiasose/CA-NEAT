@@ -1,5 +1,5 @@
 from statistics import median
-from typing import List
+from typing import List, Tuple
 from uuid import UUID
 
 from collections import defaultdict
@@ -7,22 +7,18 @@ from collections import defaultdict
 from database import Db
 
 
-def get_total_fitnesses_by_species_by_generation(db: Db, scenario_id: int):
+def get_total_fitnesses_by_species_by_generation(db: Db, scenario_id: int, generation_range: Tuple[int, int]):
     """
     Create a data structure holding information about total fitness for each species for each generation
     """
-    scenario = db.get_scenario(scenario_id=scenario_id)
-    generations = scenario.generations
-
     total_fitnesses_by_species_by_generation = []
-    for n in range(generations):
+    for n in range(*generation_range):
         generation = db.get_generation(scenario_id=scenario_id, generation=n)
         fitnesses_by_species = defaultdict(float)
         for individual in generation:
             fitnesses_by_species[individual.genotype.species_id] += individual.fitness
 
-        if fitnesses_by_species:
-            total_fitnesses_by_species_by_generation.append(fitnesses_by_species)
+        total_fitnesses_by_species_by_generation.append(fitnesses_by_species)
 
     return total_fitnesses_by_species_by_generation
 
@@ -35,9 +31,8 @@ def is_species_stagnant(total_fitnesses_by_species_by_generation: List[dict], sp
     """
     stagnation_counter = 0
 
-    latest_gen = total_fitnesses_by_species_by_generation[-1]
-
     if median_threshold:
+        latest_gen = total_fitnesses_by_species_by_generation[-1]
         median_fitness_for_generation = median(latest_gen.values())
 
         if latest_gen[species_id] > median_fitness_for_generation:
