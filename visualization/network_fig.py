@@ -3,22 +3,19 @@ import copy
 import graphviz
 
 OUTPUT_NODE_STYLE = {'style': 'filled'}
-
 INPUT_NODE_STYLE = {'style': 'filled', 'shape': 'box'}
+INVISIBLE_NODE = {'style': 'invisible', }
+
+SYMBOLS = {
+    'sigmoid': 'σ'
+}
 
 
-def draw_net(genome, view=False, filename=None, node_labels=None, show_disabled=True, prune_unused=False,
-             node_colors=None, fmt='svg'):
-    if node_labels is None:
-        node_labels = {}
+def symbol(name):
+    return SYMBOLS.get(name, name)
 
-    assert type(node_labels) is dict
 
-    if node_colors is None:
-        node_colors = {}
-
-    assert type(node_colors) is dict
-
+def draw_net(genome, view=False, filename=None, show_disabled=True, prune_unused=False, fmt='svg'):
     node_attrs = {
         'shape': 'circle',
         'fontsize': '9',
@@ -32,20 +29,30 @@ def draw_net(genome, view=False, filename=None, node_labels=None, show_disabled=
     for ng_id, ng in genome.node_genes.items():
         if ng.type == 'INPUT':
             inputs.add(ng_id)
-            label = node_labels.get(ng_id, str(ng_id))
+            label = symbol(ng.activation_type)
             input_attrs = INPUT_NODE_STYLE
-            input_attrs['fillcolor'] = node_colors.get(ng_id, 'lightgray')
-            dot.node(str(ng_id), label=label, _attributes=input_attrs)
+            input_attrs['fillcolor'] = 'lightgray'
+            in_hidden_node = str(ng_id) + '_in'
+            node_id = str(ng_id)
+            dot.node(in_hidden_node, label='', _attributes=INVISIBLE_NODE)
+            dot.node(node_id, label=label, _attributes=input_attrs)
+            dot.edge(in_hidden_node, node_id)
 
     outputs = set()
     for ng_id, ng in genome.node_genes.items():
         if ng.type == 'OUTPUT':
             outputs.add(ng_id)
-            label = node_labels.get(ng_id, str(ng_id))
+            label = symbol(ng.activation_type)
             node_attrs = OUTPUT_NODE_STYLE
-            node_attrs['fillcolor'] = node_colors.get(ng_id, 'lightblue')
+            node_attrs['fillcolor'] = 'lightblue'
 
-            dot.node(str(ng_id), label=label, _attributes=node_attrs)
+            out_hidden_node = str(ng_id) + '_out'
+            node_id = str(ng_id)
+            sg = graphviz.Digraph()
+            sg.node(node_id, label=label, _attributes=node_attrs)
+            sg.node(out_hidden_node, label='', _attributes=INVISIBLE_NODE)
+            sg.edge(node_id, out_hidden_node)
+            dot.subgraph(sg)
 
     if prune_unused:
         connections = set()
@@ -69,9 +76,9 @@ def draw_net(genome, view=False, filename=None, node_labels=None, show_disabled=
         if n in inputs or n in outputs:
             continue
 
-        label = node_labels.get(n, str(n))
+        label = symbol(genome.node_genes[n].activation_type)
         attrs = {'style': 'filled'}
-        attrs['fillcolor'] = node_colors.get(str(n), 'white')
+        attrs['fillcolor'] = 'white'
         dot.node(str(n), label=label, _attributes=attrs)
 
     for cg in genome.conn_genes.values():
@@ -84,7 +91,8 @@ def draw_net(genome, view=False, filename=None, node_labels=None, show_disabled=
             style = 'solid' if cg.enabled else 'dotted'
             color = 'green' if cg.weight > 0 else 'red'
             width = str(0.1 + abs(cg.weight / 5.0))
-            dot.edge(a, b, _attributes={'style': style, 'color': color, 'penwidth': width})
+            edge_attrs = {'style': style, 'color': color, 'penwidth': width}
+            dot.edge(a, b, _attributes=edge_attrs, label=str(round(cg.weight, 1)))
 
     dot.render(filename, view=view)
 
