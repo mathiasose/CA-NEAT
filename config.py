@@ -8,6 +8,7 @@ class CPPNNEATConfig(Config):
     elitism = 0
     initial_hidden_nodes = 0
     stagnation_median_threshold = True
+    stop_when_optimal_found = True
 
     def __init__(self, **kwargs):
         from neat import activation_functions

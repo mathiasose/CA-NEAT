@@ -77,13 +77,17 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     'results' is return values of preceding group of tasks, can safely be ignored
     """
     db = get_db(db_path)
-    scenario = db.get_scenario(scenario_id)
-    population = db.get_generation(scenario_id, generation_n)
+    session = db.Session()
+    scenario = db.get_scenario(scenario_id, session=session)
+    population = db.get_generation(scenario_id, generation_n, session=session)
 
     next_gen = generation_n + 1
 
-    if next_gen == scenario.generations:
-        logging.info('Scenario {} finished after {} generations'.format(scenario_id, scenario.generations))
+    optimal_solution = population.filter(Individual.fitness >= 1.0)
+    optimal_found = (neat_config.stop_when_optimal_found and session.query(optimal_solution.exists()).scalar())
+
+    if (next_gen == scenario.generations) or optimal_found:
+        logging.info('Scenario {} finished after {} generations'.format(scenario_id, next_gen))
         return
 
     species = sort_into_species([individual.genotype for individual in population])
