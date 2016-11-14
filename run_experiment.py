@@ -10,8 +10,10 @@ from sqlalchemy.sql.functions import now
 from add_dill import add_dill
 from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
-from run_neat import create_initial_population, neat_reproduction, sort_into_species, speciate
-from stagnation import get_total_fitnesses_by_species_by_generation, is_species_stagnant
+from run_neat import (create_initial_population, neat_reproduction,
+                      sort_into_species, speciate)
+from stagnation import (get_total_fitnesses_by_species_by_generation,
+                        is_species_stagnant)
 
 add_dill()
 
@@ -149,9 +151,12 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
 def handle_individual(db_path: str, scenario_id: int, generation: int, individual_number: int, genotype: Genome,
                       fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
     phenotype = create_feed_forward_phenotype(genotype)
-    fitness = fitness_f(phenotype=phenotype, ca_config=ca_config)
+    try:
+        fitness = fitness_f(phenotype=phenotype, ca_config=ca_config)
 
-    assert 0.0 <= fitness <= 1.0
+        assert 0.0 <= fitness <= 1.0
+    except OverflowError:
+        fitness = 0.0
 
     if hasattr(genotype, 'fitness'):
         genotype.fitness = fitness
