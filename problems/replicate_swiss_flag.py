@@ -1,6 +1,5 @@
-from datetime import datetime
-
 import os
+from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
@@ -56,7 +55,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
             # the initial state should not be evaluated and contribute to the score
             continue
 
-        partial_matches = find_pattern_partial_matches(grid, pattern)
+        partial_matches = tuple(find_pattern_partial_matches(grid, pattern))
 
         if not partial_matches:
             continue

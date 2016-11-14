@@ -39,7 +39,6 @@ def fitness_f(phenotype, ca_config: CAConfig):
             inputs_float_values = tuple(state_normalization_rules[x] for x in inputs_discrete_values)
 
             outputs = network.serial_activate(inputs_float_values)
-
             return max(zip(alphabet, outputs), key=itemgetter(1))[0]
 
         yield initial_grid
@@ -55,7 +54,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
             # the initial state should not be evaluated and contribute to the score
             continue
 
-        partial_matches = find_pattern_partial_matches(grid, pattern)
+        partial_matches = tuple(find_pattern_partial_matches(grid, pattern))
 
         if not partial_matches:
             continue

@@ -1,6 +1,5 @@
 from statistics import mean
-from typing import List
-from uuid import uuid4
+from typing import Iterator
 
 from geometry.cell_grid import CellGrid2D, FiniteCellGrid2D
 
@@ -23,34 +22,39 @@ def count_pattern(grid: CellGrid2D, pattern) -> int:
     return count
 
 
-def find_pattern_partial_matches(grid: CellGrid2D, pattern) -> List[float]:
-    live_cells = set(coord for coord, _ in grid.get_live_cells())
-
+def find_pattern_partial_matches(grid: CellGrid2D, pattern) -> Iterator[float]:
     pattern_h, pattern_w = len(pattern), len(pattern[0])
     pattern_area = pattern_h * pattern_w
 
-    match_fractions = []
+    (x_min, y_min), (x_max, y_max) = grid.get_extreme_coords()
 
-    for (x, y) in live_cells:
-        # Assuming the target pattern is padded by a 1-wide border of "dead" cells,
-        # we pick a rectangle where (x,y) should be the top left live cell
+    x0 = x_min % pattern_w
+    x1 = x_max % pattern_w
+    if x_min < 0:
+        x0 = -x0
 
-        x_range = (x - 1, x - 1 + pattern_w)
-        y_range = (y - 1, y - 1 + pattern_h)
-        rectangle = grid.get_rectangle(
-            x_range=x_range,
-            y_range=y_range
-        )
+    y0 = y_min % pattern_h
+    y1 = y_max % pattern_h
+    if y_min < 0:
+        y0 = -y0
 
-        correct_count = 0
-        for row_a, row_b in zip(pattern, rectangle):
-            for a, b in zip(row_a, row_b):
-                if a == b:
-                    correct_count += 1
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            rectangle = grid.get_rectangle(
+                x_range=(pattern_w * x, pattern_w * (x + 1)),
+                y_range=(pattern_h * y, pattern_w * (y + 1))
+            )
 
-        match_fractions.append(correct_count / pattern_area)
+            correct_count = 0
+            for row_a, row_b in zip(pattern, rectangle):
+                for a, b in zip(row_a, row_b):
+                    if a == b:
+                        correct_count += 1
 
-    return match_fractions
+            if correct_count == 0:
+                continue
+
+            yield (correct_count / pattern_area)
 
 
 if __name__ == '__main__':
@@ -80,13 +84,15 @@ if __name__ == '__main__':
     )
 
     grid.add_pattern_at_coord(pattern, (0, 0))
-    grid.add_pattern_at_coord(pattern, (10, 0))
-    grid.add_pattern_at_coord(wrong_pattern, (0, 10))
-    grid.add_pattern_at_coord(pattern, (10, 10))
+    grid.add_pattern_at_coord(pattern, (9, 0))
+    grid.add_pattern_at_coord(wrong_pattern, (0, 9))
+    grid.add_pattern_at_coord(pattern, (-9, -9))
 
     print(grid)
 
-    l = find_pattern_partial_matches(grid, pattern)
-    print(sorted(l, reverse=True))
+    l = tuple(find_pattern_partial_matches(grid, pattern))
+    print(l)
+    l = sorted(l, reverse=True)[:4]
+    print(l)
     print(mean(l))
     print(count_pattern(grid, pattern))
