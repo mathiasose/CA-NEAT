@@ -45,14 +45,14 @@ def find_pattern_partial_matches(grid: CellGrid2D, pattern) -> Iterator[float]:
                 y_range=(pattern_h * y, pattern_w * (y + 1))
             )
 
+            if all(all(cell == grid.dead_cell for cell in row) for row in rectangle):
+                continue
+
             correct_count = 0
             for row_a, row_b in zip(pattern, rectangle):
                 for a, b in zip(row_a, row_b):
                     if a == b:
                         correct_count += 1
-
-            if correct_count == 0:
-                continue
 
             yield (correct_count / pattern_area)
 
