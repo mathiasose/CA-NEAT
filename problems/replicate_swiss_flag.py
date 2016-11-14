@@ -79,7 +79,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
 CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = (' ', '■',)
 CA_CONFIG.neighbourhood = VON_NEUMANN
-CA_CONFIG.iterations = 25
+CA_CONFIG.iterations = 30
 CA_CONFIG.etc = {
     'pattern': (
         (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
@@ -96,7 +96,7 @@ CA_CONFIG.etc = {
 NEAT_CONFIG = CPPNNEATConfig()
 NEAT_CONFIG.pop_size = 200
 NEAT_CONFIG.generations = 200
-NEAT_CONFIG.stagnation_limit = 15
+NEAT_CONFIG.stagnation_limit = 10
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
 NEAT_CONFIG.initial_hidden_nodes = 0
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         pop=NEAT_CONFIG.pop_size,
         gens=NEAT_CONFIG.generations
     )
-    for _ in range(10):
+    for _ in range(100):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
