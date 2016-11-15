@@ -4,7 +4,7 @@ from tkinter import TclError
 import matplotlib.pyplot as plt
 
 from database import Db, get_db
-from utils import pluck, PROJECT_ROOT
+from utils import PROJECT_ROOT, pluck
 
 
 def plot_fitnesses_over_generations(db: Db, scenario_id: int, title=None, interval=None, action='show'):
@@ -27,7 +27,7 @@ def plot_fitnesses_over_generations(db: Db, scenario_id: int, title=None, interv
         plt.title(title or scenario.description)
         # fig.canvas.set_window_title(os.path.basename(db_path))
 
-        ax1.axis([0, n_generations, -0.1, 1.1])
+        ax1.axis([0, max(generation_fitnesses.keys()), -0.1, 1.1])
         ax1.boxplot(
             x=tuple(generation_fitnesses.get(n, []) for n in range(0, n_generations)),
             positions=range(0, n_generations),
@@ -49,7 +49,10 @@ def plot_fitnesses_over_generations(db: Db, scenario_id: int, title=None, interv
 
     while True:
         for generation_n in range(n_generations):
-            generation = db.get_generation(scenario_id=scenario_id, generation=generation_n)
+            generation = db.get_generation(scenario_id=scenario_id, generation=generation_n, session=session)
+            if generation.count() == 0:
+                break
+
             genotypes = pluck(generation, 'genotype')
             n_species[generation_n] = len(set(gt.species_id for gt in genotypes))
 
