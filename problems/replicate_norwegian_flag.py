@@ -3,77 +3,9 @@ from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
+from problems.common import replication_fitness_f
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
-
-
-def fitness_f(phenotype, ca_config: CAConfig):
-    from ca.iterate import n_iterations
-    from patterns.replicate_pattern import find_pattern_partial_matches
-    from geometry.cell_grid import CellGrid2D
-    from statistics import mean
-    from utils import create_state_normalization_rules
-    from operator import itemgetter
-    from neat.nn import FeedForwardNetwork
-    from typing import Tuple, T
-
-    neighbourhood = ca_config.neighbourhood
-    alphabet = ca_config.alphabet
-    pattern = ca_config.etc['pattern']
-    wanted_occurrences = ca_config.etc['wanted_occurrences']
-    iterations = ca_config.iterations
-    state_normalization_rules = create_state_normalization_rules(states=alphabet)
-
-    initial_grid = CellGrid2D(
-        cell_states=alphabet,
-        neighbourhood=neighbourhood,
-    )
-
-    initial_grid.add_pattern_at_coord(pattern, (0, 0))
-
-    def ca_develop(network: FeedForwardNetwork):
-        def transition_f(inputs_discrete_values: Tuple[T]) -> T:
-            if all((x == initial_grid.dead_cell) for x in inputs_discrete_values):
-                return initial_grid.dead_cell
-
-            inputs_float_values = tuple(state_normalization_rules[x] for x in inputs_discrete_values)
-
-            outputs = network.serial_activate(inputs_float_values)
-            return max(zip(alphabet, outputs), key=itemgetter(1))[0]
-
-        yield initial_grid
-
-        for grid in n_iterations(initial_grid, transition_f, iterations):
-            yield grid
-
-    grid_iterations = ca_develop(phenotype)
-
-    best = 0.0
-    for i, grid in enumerate(grid_iterations):
-        if i == 0:
-            # the initial state should not be evaluated and contribute to the score
-            continue
-
-        partial_matches = tuple(find_pattern_partial_matches(grid, pattern))
-
-        if not partial_matches:
-            continue
-
-        best_n_matches = sorted(partial_matches, reverse=True)[:wanted_occurrences]
-
-        # to encourage perfect replicas we penalize imperfect replicas a little bit extra
-        # so that the difference between perfect and near-perfect is greater
-        penalty_factor = 0.9
-        best_n_matches = [(1.0 if score >= 1.0 else score * penalty_factor) for score in best_n_matches]
-
-        avg = mean(best_n_matches)
-        best = max(best, avg)
-
-        if best >= 1.0:
-            break
-
-    return best
-
 
 CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = (' ', '■', '□', '▨')
@@ -92,6 +24,7 @@ CA_CONFIG.etc = {
         (' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',),
     ),
     'wanted_occurrences': 3,
+    'penalty_factor': 0.9,
 }
 
 NEAT_CONFIG = CPPNNEATConfig()
@@ -139,11 +72,11 @@ if __name__ == '__main__':
         pop=NEAT_CONFIG.pop_size,
         gens=NEAT_CONFIG.generations
     )
-    for _ in range(3):
+    for _ in range(100):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
-            fitness_f=fitness_f,
+            fitness_f=replication_fitness_f,
             pair_selection_f=PAIR_SELECTION_F,
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,

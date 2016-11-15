@@ -22,6 +22,16 @@ def count_pattern(grid: CellGrid2D, pattern) -> int:
     return count
 
 
+def count_correct_cells(test_pattern, target_pattern) -> int:
+    correct_count = 0
+    for row_a, row_b in zip(target_pattern, test_pattern):
+        for a, b in zip(row_a, row_b):
+            if a == b:
+                correct_count += 1
+
+    return correct_count
+
+
 def find_pattern_partial_matches(grid: CellGrid2D, pattern) -> Iterator[float]:
     pattern_h, pattern_w = len(pattern), len(pattern[0])
     pattern_area = pattern_h * pattern_w
@@ -48,13 +58,7 @@ def find_pattern_partial_matches(grid: CellGrid2D, pattern) -> Iterator[float]:
             if all(all(cell == grid.dead_cell for cell in row) for row in rectangle):
                 continue
 
-            correct_count = 0
-            for row_a, row_b in zip(pattern, rectangle):
-                for a, b in zip(row_a, row_b):
-                    if a == b:
-                        correct_count += 1
-
-            yield (correct_count / pattern_area)
+            yield count_correct_cells(target_pattern=pattern, test_pattern=rectangle) / pattern_area
 
 
 if __name__ == '__main__':
