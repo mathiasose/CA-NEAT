@@ -33,32 +33,22 @@ def count_correct_cells(test_pattern, target_pattern) -> int:
 
 
 def find_pattern_partial_matches(grid: CellGrid2D, pattern) -> Iterator[float]:
+    live_cells = set(coord for coord, _ in grid.get_live_cells())
+
     pattern_h, pattern_w = len(pattern), len(pattern[0])
     pattern_area = pattern_h * pattern_w
 
-    (x_min, y_min), (x_max, y_max) = grid.get_extreme_coords()
+    for (x, y) in live_cells:
+        x_range = (x - 1, x - 1 + pattern_w)
+        y_range = (y - 1, y - 1 + pattern_h)
+        rectangle = grid.get_rectangle(
+            x_range=x_range,
+            y_range=y_range,
+        )
 
-    x0 = x_min % pattern_w
-    x1 = x_max % pattern_w
-    if x_min < 0:
-        x0 = -x0
+        correct_count = count_correct_cells(test_pattern=rectangle, target_pattern=pattern)
 
-    y0 = y_min % pattern_h
-    y1 = y_max % pattern_h
-    if y_min < 0:
-        y0 = -y0
-
-    for y in range(y0, y1):
-        for x in range(x0, x1):
-            rectangle = grid.get_rectangle(
-                x_range=(pattern_w * x, pattern_w * (x + 1)),
-                y_range=(pattern_h * y, pattern_w * (y + 1))
-            )
-
-            if all(all(cell == grid.dead_cell for cell in row) for row in rectangle):
-                continue
-
-            yield count_correct_cells(target_pattern=pattern, test_pattern=rectangle) / pattern_area
+        yield (correct_count / pattern_area)
 
 
 if __name__ == '__main__':

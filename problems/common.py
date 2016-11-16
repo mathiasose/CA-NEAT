@@ -59,6 +59,8 @@ def replication_fitness_f(phenotype, ca_config: CAConfig):
 
         best_n_matches = sorted(partial_matches, reverse=True)[:wanted_occurrences]
 
+        assert len(best_n_matches) == wanted_occurrences
+
         # to encourage perfect replicas we penalize imperfect replicas a little bit extra
         # so that the difference between perfect and near-perfect is greater
         penalty_factor = ca_config.etc.get('penalty_factor', 1.0)
