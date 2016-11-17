@@ -10,7 +10,7 @@ from selection import sigma_scaled
 CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = (' ', '■', '□', '▨')
 CA_CONFIG.neighbourhood = VON_NEUMANN
-CA_CONFIG.iterations = 25
+CA_CONFIG.iterations = 30
 CA_CONFIG.etc = {
     'pattern': (
         (' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',),
@@ -28,13 +28,13 @@ CA_CONFIG.etc = {
 
 NEAT_CONFIG = CPPNNEATConfig()
 NEAT_CONFIG.pop_size = 200
-NEAT_CONFIG.generations = 200
-NEAT_CONFIG.stagnation_limit = 15
+NEAT_CONFIG.generations = 10000
+NEAT_CONFIG.stagnation_limit = 10
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
 NEAT_CONFIG.initial_hidden_nodes = 0
 NEAT_CONFIG.weight_stdev = 1.0
-NEAT_CONFIG.compatibility_threshold = 0.85
+NEAT_CONFIG.compatibility_threshold = 0.75
 NEAT_CONFIG.prob_add_conn = 0.458
 NEAT_CONFIG.prob_add_node = 0.185
 NEAT_CONFIG.prob_delete_conn = 0.246
