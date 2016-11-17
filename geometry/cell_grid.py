@@ -136,9 +136,9 @@ class CellGrid2D(CellGrid):
         (x_min, y_min), (x_max, y_max) = self.get_extreme_coords()
 
         s = ''
-        for y in range(y_min, y_max + 1):
+        for y in range(y_min, y_max):
             s += '{}\t|'.format(y)
-            for x in range(x_min, x_max + 1):
+            for x in range(x_min, x_max):
                 v = str(self.get((x, y)))
                 s += ' ' if v == self.dead_cell else v
             s += '|\n'
@@ -232,7 +232,7 @@ class FiniteCellGrid2D(CellGrid2D):
 
         return super().get(coord, default=default)
 
-    def get_whole(self, f=lambda x: x):
+    def get_whole(self, f=None):
         return self.get_rectangle(self.x_range, self.y_range, f=f)
 
     def get_enumerated_whole(self):
@@ -245,11 +245,38 @@ class FiniteCellGrid2D(CellGrid2D):
         return new
 
 
-if __name__ == '__main__':
-    grid = CellGrid2D(cell_states='01')
-    grid.set((0, 0), '1')
-    grid.set((0, 5), '1')
-    grid.set((5, 0), '1')
-    print(grid.get_extreme_coords())
-    print(grid.area)
-    print(grid.get_rectangle((0, 5), (0, 5)))
+class ToroidalCellGrid2D(FiniteCellGrid2D):
+    def __init__(self, cell_states, x_range, y_range, values=None, neighbourhood=None):
+        x0, x1 = x_range
+        y0, y1 = y_range
+
+        assert x0 == 0
+        assert y0 == 0
+
+        super().__init__(
+            cell_states=cell_states,
+            x_range=x_range,
+            y_range=y_range,
+            values=values,
+            neighbourhood=neighbourhood
+        )
+
+    def is_coord_within_bounds(self, coord):
+        x, y = coord
+        l, r = self.x_range
+        t, b = self.y_range
+
+        return (l <= x < r) and (t <= y < b)
+
+    def get_absolute_coord(self, coord):
+        x, y = coord
+        l, r = self.x_range
+        t, b = self.y_range
+
+        return x % r, y % b
+
+    def set(self, coord, value):
+        super().set(self.get_absolute_coord(coord), value)
+
+    def get(self, coord, default=None):
+        return super().get(self.get_absolute_coord(coord), default=default)
