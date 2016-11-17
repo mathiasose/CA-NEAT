@@ -31,10 +31,16 @@ def initialize_scenario(db_path: str, description: str, fitness_f, pair_selectio
     assert scenario
 
     initial_genotypes = list(create_initial_population(neat_config))
+    compatibility_threshold = neat_config.compatibility_threshold
 
-    species = speciate(initial_genotypes, compatibility_threshold=neat_config.compatibility_threshold)
+    species = None
+    while not species:
+        try:
+            species = speciate(initial_genotypes, compatibility_threshold=compatibility_threshold)
 
-    assert len(species) > 1
+            assert len(species) > 1
+        except AssertionError:
+            compatibility_threshold *= 0.9  # just for the initial population
 
     initialize_generation(
         db_path=db_path,
@@ -48,6 +54,8 @@ def initialize_scenario(db_path: str, description: str, fitness_f, pair_selectio
     )
 
     session.flush()
+
+    return scenario
 
 
 def initialize_generation(db_path: str, scenario_id: int, generation: int, genotypes: List[Genome],
