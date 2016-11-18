@@ -1,6 +1,6 @@
 import math
 import random
-from typing import List, Tuple, Iterator
+from typing import Iterator, List, Tuple
 from uuid import uuid4
 
 from neat.genome import Genome
@@ -19,7 +19,7 @@ def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
         if hidden_nodes:
             g.add_hidden_nodes(hidden_nodes)
 
-        g.connect_full()
+        g.connect_partial(fraction=0.5 * (1 + random.random()))
         yield g
 
 

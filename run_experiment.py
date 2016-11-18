@@ -12,7 +12,7 @@ from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
 from run_neat import (create_initial_population, neat_reproduction,
                       sort_into_species, speciate)
-from stagnation import (get_total_fitnesses_by_species_by_generation,
+from stagnation import (get_fitnesses_by_species_by_generation,
                         is_species_stagnant)
 
 add_dill()
@@ -31,16 +31,7 @@ def initialize_scenario(db_path: str, description: str, fitness_f, pair_selectio
     assert scenario
 
     initial_genotypes = list(create_initial_population(neat_config))
-    compatibility_threshold = neat_config.compatibility_threshold
-
-    species = None
-    while not species:
-        try:
-            species = speciate(initial_genotypes, compatibility_threshold=compatibility_threshold)
-
-            assert len(species) > 1
-        except AssertionError:
-            compatibility_threshold *= 0.9  # just for the initial population
+    speciate(initial_genotypes, compatibility_threshold=neat_config.compatibility_threshold)
 
     initialize_generation(
         db_path=db_path,
@@ -106,16 +97,15 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     if (not stagnation_limit) or (generation_n < stagnation_limit):
         alive_species = species
     else:
-        total_fitnesses_by_species_by_generation = get_total_fitnesses_by_species_by_generation(
+        total_fitnesses_by_species_by_generation = get_fitnesses_by_species_by_generation(
             db=db,
             scenario_id=scenario_id,
             generation_range=(generation_n - stagnation_limit, next_gen),
         )
         alive_species = [s for s in species if not is_species_stagnant(
-            total_fitnesses_by_species_by_generation=total_fitnesses_by_species_by_generation,
+            fitnesses_by_species_by_generation=total_fitnesses_by_species_by_generation,
             species_id=s.ID,
             stagnation_limit=stagnation_limit,
-            median_threshold=neat_config.stagnation_median_threshold,
         )]
 
     if not alive_species:
