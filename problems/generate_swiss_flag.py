@@ -58,6 +58,10 @@ def fitness_f(phenotype, ca_config: CAConfig):
     best = 0.0
     for i, grid in enumerate(grid_iterations):
         correctness_fraction = count_correct_cells(grid.get_whole(), target_pattern=target_pattern) / pattern_area
+
+        if correctness_fraction >= 1.0:
+            return correctness_fraction
+
         if correctness_fraction > best:
             best = correctness_fraction
 
@@ -137,7 +141,8 @@ if __name__ == '__main__':
         pop=NEAT_CONFIG.pop_size,
         gens=NEAT_CONFIG.generations
     )
-    for _ in range(10):
+
+    for _ in range(100):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
