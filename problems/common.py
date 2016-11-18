@@ -1,7 +1,7 @@
 from config import CAConfig
 
 
-def replication_fitness_f(phenotype, ca_config: CAConfig):
+def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
     from ca.iterate import n_iterations
     from patterns.replicate_pattern import find_pattern_partial_matches
     from geometry.cell_grid import CellGrid2D
@@ -73,3 +73,67 @@ def replication_fitness_f(phenotype, ca_config: CAConfig):
             break
 
     return best
+
+
+def morphogenesis_fitness_f(phenotype, ca_config: CAConfig) -> float:
+    from ca.iterate import n_iterations
+    from patterns.replicate_pattern import count_correct_cells
+    from geometry.cell_grid import ToroidalCellGrid2D
+    from utils import create_state_normalization_rules
+    from operator import itemgetter
+    from neat.nn import FeedForwardNetwork
+    from typing import Tuple, T
+    from math import exp
+
+    neighbourhood = ca_config.neighbourhood
+    alphabet = ca_config.alphabet
+    target_pattern = ca_config.etc['target_pattern']
+    seed = ca_config.etc['seed']
+    iterations = ca_config.iterations
+    state_normalization_rules = create_state_normalization_rules(states=alphabet)
+
+    pattern_w = len(target_pattern[0])
+    pattern_h = len(target_pattern)
+    pattern_area = pattern_h * pattern_w
+
+    initial_grid = ToroidalCellGrid2D(
+        cell_states=alphabet,
+        neighbourhood=neighbourhood,
+        x_range=(0, pattern_w),
+        y_range=(0, pattern_h),
+    )
+
+    initial_grid.add_pattern_at_coord(seed, (0, 0))
+
+    def ca_develop(network: FeedForwardNetwork):
+        def transition_f(inputs_discrete_values: Tuple[T]) -> T:
+            if all((x == initial_grid.dead_cell) for x in inputs_discrete_values):
+                return initial_grid.dead_cell
+
+            inputs_float_values = tuple(state_normalization_rules[x] for x in inputs_discrete_values)
+
+            outputs = network.serial_activate(inputs_float_values)
+
+            return max(zip(alphabet, outputs), key=itemgetter(1))[0]
+
+        yield initial_grid
+
+        for grid in n_iterations(initial_grid, transition_f, iterations):
+            yield grid
+
+    grid_iterations = ca_develop(phenotype)
+
+    best = 0.0
+    for i, grid in enumerate(grid_iterations):
+        correctness_fraction = count_correct_cells(grid.get_whole(), target_pattern=target_pattern) / pattern_area
+
+        if correctness_fraction >= 1.0:
+            return correctness_fraction
+
+        if correctness_fraction > best:
+            best = correctness_fraction
+
+    k = 5
+    redistribute = lambda x: x * exp(k * x) / exp(k)
+
+    return redistribute(best)

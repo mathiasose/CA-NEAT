@@ -4,18 +4,18 @@ import os
 
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
-from patterns.patterns import ALPHABET_2, SEED_5X5, SWISS
+from patterns.patterns import SEED_6X6, ALPHABET_4, TRICOLOR
 from problems.common import morphogenesis_fitness_f
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
 
 CA_CONFIG = CAConfig()
-CA_CONFIG.alphabet = ALPHABET_2
+CA_CONFIG.alphabet = ALPHABET_4
 CA_CONFIG.neighbourhood = VON_NEUMANN
 CA_CONFIG.iterations = 30
 CA_CONFIG.etc = {
-    'target_pattern': SWISS,
-    'seed': SEED_5X5,
+    'target_pattern': TRICOLOR,
+    'seed': SEED_6X6,
 }
 
 NEAT_CONFIG = CPPNNEATConfig()
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
 
-    DESCRIPTION = '"Swiss flag morphogenesis"\npopulation size: {pop}\ngenerations: {gens}'.format(
+    DESCRIPTION = '"Tricolor flag morphogenesis"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,
         gens=NEAT_CONFIG.generations
     )
