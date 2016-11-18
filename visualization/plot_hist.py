@@ -10,11 +10,11 @@ from utils import PROJECT_ROOT
 seaborn.set_style('white')
 
 
-def plot_fitnesses_over_generations(db: Db):
+def plot_generations_until_optimal(db: Db):
     session = db.Session()
     scenarios = db.get_scenarios(session=session)
 
-    assert scenarios
+    assert scenarios.count() >= 1
 
     plt.ion()
     ax = plt.gca()
@@ -34,15 +34,16 @@ def plot_fitnesses_over_generations(db: Db):
     for n, group in groupby(gens, lambda x: x):
         print(n, '-' * len(tuple(group)))
 
-    ax.hist(gens, bins=20, range=(0, 20), cumulative=True)
+    n = max(gens)
+    ax.hist(gens, bins=n, range=(0, n), cumulative=True)
     plt.show(block=True)
 
     return plt
 
 
 if __name__ == '__main__':
-    problem_dir = 'replicate_swiss_flag/'
-    db_file = '2016-11-16 12:39:05.554163.db'
+    problem_dir = 'replicate_mosaic/'
+    db_file = '2016-11-16 20:49:47.478567.db'
 
     THIS_FILE = os.path.abspath(__file__)
     RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))
@@ -51,4 +52,4 @@ if __name__ == '__main__':
 
     print(db_path)
     db = get_db(db_path)
-    plot_fitnesses_over_generations(db)
+    plot_generations_until_optimal(db)
