@@ -3,25 +3,17 @@ from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
+from patterns.patterns import ALPHABET_4, QUIESCENT, TRICOLOR, pad_pattern
 from problems.common import replication_fitness_f
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
 
 CA_CONFIG = CAConfig()
-CA_CONFIG.alphabet = (' ', '■', '□', '▨')
+CA_CONFIG.alphabet = ALPHABET_4
 CA_CONFIG.neighbourhood = VON_NEUMANN
 CA_CONFIG.iterations = 30
 CA_CONFIG.etc = {
-    'pattern': (
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
-        (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
-        (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
-        (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
-        (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
-        (' ', '■', '■', '□', '□', '▨', '▨', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-    ),
+    'pattern': pad_pattern(TRICOLOR, QUIESCENT),
     'wanted_occurrences': 3,
     'penalty_factor': 0.9,
 }

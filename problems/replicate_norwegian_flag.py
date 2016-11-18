@@ -2,27 +2,18 @@ import os
 from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
+from geometry.neighbourhoods import VON_NEUMANN
+from patterns.patterns import ALPHABET_4, NORWEGIAN, pad_pattern
 from problems.common import replication_fitness_f
-from geometry.neighbourhoods import EXTENDED_VON_NEUMANN
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
 
 CA_CONFIG = CAConfig()
-CA_CONFIG.alphabet = (' ', '■', '□', '▨')
-CA_CONFIG.neighbourhood = EXTENDED_VON_NEUMANN
-CA_CONFIG.iterations = 25
+CA_CONFIG.alphabet = ALPHABET_4
+CA_CONFIG.neighbourhood = VON_NEUMANN
+CA_CONFIG.iterations = 30
 CA_CONFIG.etc = {
-    'pattern': (
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', '■', '□', '▨', '□', '■', '■', '■', ' ',),
-        (' ', '■', '□', '▨', '□', '■', '■', '■', ' ',),
-        (' ', '□', '□', '▨', '□', '□', '□', '□', ' ',),
-        (' ', '▨', '▨', '▨', '▨', '▨', '▨', '▨', ' ',),
-        (' ', '□', '□', '▨', '□', '□', '□', '□', ' ',),
-        (' ', '■', '□', '▨', '□', '■', '■', '■', ' ',),
-        (' ', '■', '□', '▨', '□', '■', '■', '■', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-    ),
+    'pattern': pad_pattern(NORWEGIAN),
     'wanted_occurrences': 3,
     'penalty_factor': 0.9,
 }

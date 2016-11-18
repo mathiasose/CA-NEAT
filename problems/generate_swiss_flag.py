@@ -3,6 +3,7 @@ from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
+from patterns.patterns import ALPHABET_2, SEED_5X5, SWISS
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
 
@@ -20,7 +21,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
     target_pattern = ca_config.etc['target_pattern']
-    initial_pattern = ca_config.etc['initial_pattern']
+    seed = ca_config.etc['seed']
     iterations = ca_config.iterations
     state_normalization_rules = create_state_normalization_rules(states=alphabet)
 
@@ -35,7 +36,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
         y_range=(0, pattern_h),
     )
 
-    initial_grid.add_pattern_at_coord(initial_pattern, (0, 0))
+    initial_grid.add_pattern_at_coord(seed, (0, 0))
 
     def ca_develop(network: FeedForwardNetwork):
         def transition_f(inputs_discrete_values: Tuple[T]) -> T:
@@ -72,28 +73,12 @@ def fitness_f(phenotype, ca_config: CAConfig):
 
 
 CA_CONFIG = CAConfig()
-CA_CONFIG.alphabet = (' ', '■',)
+CA_CONFIG.alphabet = ALPHABET_2
 CA_CONFIG.neighbourhood = VON_NEUMANN
 CA_CONFIG.iterations = 30
 CA_CONFIG.etc = {
-    'target_pattern': (
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', '■', '■', '■', '■', '■', ' ',),
-        (' ', '■', '■', ' ', '■', '■', ' ',),
-        (' ', '■', ' ', ' ', ' ', '■', ' ',),
-        (' ', '■', '■', ' ', '■', '■', ' ',),
-        (' ', '■', '■', '■', '■', '■', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-    ),
-    'initial_pattern': (
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', ' ', ' ', '■', ' ', ' ', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-        (' ', ' ', ' ', ' ', ' ', ' ', ' ',),
-    ),
+    'target_pattern': SWISS,
+    'seed': SEED_5X5,
 }
 
 NEAT_CONFIG = CPPNNEATConfig()
@@ -142,7 +127,7 @@ if __name__ == '__main__':
         gens=NEAT_CONFIG.generations
     )
 
-    for _ in range(100):
+    for _ in range(1):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
