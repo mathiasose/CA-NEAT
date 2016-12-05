@@ -1,18 +1,16 @@
-import os
-from operator import itemgetter
-from statistics import mean
 from typing import T, Tuple
 
+import os
 import seaborn
-from matplotlib import pyplot as plt
 from matplotlib import animation
-from matplotlib.colors import ListedColormap
+from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap, BoundaryNorm
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
+from operator import itemgetter
 
 from ca.iterate import n_iterations
 from database import Individual, get_db
-from geometry.cell_grid import CellGrid2D, ToroidalCellGrid2D
-from patterns.replicate_pattern import find_pattern_partial_matches
+from geometry.cell_grid import ToroidalCellGrid2D
 from utils import PROJECT_ROOT, create_state_normalization_rules
 from visualization.network_fig import draw_net
 
@@ -21,13 +19,13 @@ INTERVAL = 5
 if __name__ == '__main__':
     seaborn.set(style='white')
 
-    from problems.generate_swiss_flag import CA_CONFIG
+    from problems.generate_tricolor import CA_CONFIG
 
-    problem_name = 'generate_swiss_flag'
-    db_file = '2016-11-17 23:23:26.460816.db'
-    scenario_id = 52
-    individual_n = 118
-    generation_n = 12
+    problem_name = 'generate_tricolor'
+    db_file = '2016-12-04 18:09:12.299816.db'
+    scenario_id = 1
+    generation_n = 2
+    individual_n = 86
 
     db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
     db = get_db(db_path)
@@ -45,7 +43,7 @@ if __name__ == '__main__':
     iterations = CA_CONFIG.iterations
     neighbourhood = CA_CONFIG.neighbourhood
 
-    pattern = CA_CONFIG.etc['initial_pattern']
+    pattern = CA_CONFIG.etc['seed']
     pattern_h, pattern_w = len(pattern), len(pattern[0])
     x_range = (0, pattern_w)
     y_range = (0, pattern_h)
@@ -79,24 +77,25 @@ if __name__ == '__main__':
 
     grid_iterations = tuple(ca_develop(phenotype))
 
+    for it in grid_iterations:
+        print(it)
 
     fig = plt.figure()
-    # ax = plt.axes(xlim=x_range, ylim=y_range)
 
     n_colors = len(CA_CONFIG.alphabet)
-    if n_colors == 2:
-        colormap = ListedColormap(seaborn.color_palette(['#FFFFFF', '#FF0000'], n_colors=n_colors))
-    else:
-        colormap = ListedColormap(seaborn.color_palette('colorblind', n_colors=n_colors))
+    colormap = ListedColormap(seaborn.color_palette('colorblind', n_colors=n_colors), N=n_colors)
 
     (l, r), (t, b) = x_range, y_range
     extent = (l, r, b, t)
 
+    bounds = list(range(0, len(initial_grid.cell_states) + 1))
+    norm = BoundaryNorm(bounds, n_colors)
     im = plt.imshow(
         initial_grid.get_enumerated_rectangle(x_range=x_range, y_range=y_range),
         extent=extent,
         interpolation='none',
-        cmap=colormap
+        cmap=colormap,
+        norm=norm,
     )
 
 
@@ -112,12 +111,11 @@ if __name__ == '__main__':
         return (im,)
 
 
-    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(grid_iterations), interval=1000, blit=True)
+    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(grid_iterations), interval=500, blit=True)
     file_descriptor = '{}_{}'.format(problem_name, db_file.replace('.db', ''))
     output_path = '{}_gen{}_ind{}'.format(file_descriptor, generation_n, individual_n)
     # anim.save(output_path + '.gif', writer='imagemagick', fps=1)
     plt.show()
-
     exit(0)
     print(genotype)
     print(dict((k, v) for k, v in
