@@ -3,7 +3,8 @@ from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from geometry.neighbourhoods import VON_NEUMANN
-from patterns.patterns import ALPHABET_4, NORWEGIAN, pad_pattern
+from patterns.patterns import ALPHABET_4, NORWEGIAN, pad_pattern, QUIESCENT
+
 from problems.common import replication_fitness_f
 from run_experiment import initialize_scenario
 from selection import sigma_scaled
@@ -13,7 +14,7 @@ CA_CONFIG.alphabet = ALPHABET_4
 CA_CONFIG.neighbourhood = VON_NEUMANN
 CA_CONFIG.iterations = 30
 CA_CONFIG.etc = {
-    'pattern': pad_pattern(NORWEGIAN),
+    'pattern': pad_pattern(NORWEGIAN, QUIESCENT),
     'wanted_occurrences': 3,
     'penalty_factor': 0.9,
 }
@@ -49,6 +50,7 @@ NEAT_CONFIG.elitism = 1
 NEAT_CONFIG.survival_threshold = 0.5
 
 PAIR_SELECTION_F = sigma_scaled
+FITNESS_F = replication_fitness_f
 
 if __name__ == '__main__':
     THIS_FILE = os.path.abspath(__file__)
@@ -68,7 +70,7 @@ if __name__ == '__main__':
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
-            fitness_f=replication_fitness_f,
+            fitness_f=FITNESS_F,
             pair_selection_f=PAIR_SELECTION_F,
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,
