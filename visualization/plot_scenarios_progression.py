@@ -19,14 +19,14 @@ def plot(db: Db, show=True, n=None):
     assert scenarios.count()
 
     scenarios_fitnesses = []
-    for i, scenario in enumerate(scenarios):
+    for scenario in scenarios:
         progression = session \
             .query(Individual, func.max(Individual.fitness)) \
             .filter(Individual.scenario_id == scenario.id) \
             .order_by(Individual.generation) \
             .group_by(Individual.generation) \
             .order_by(func.max(Individual.fitness).desc())
-        print(i, progression.count(), any(f >= 1.0 for _, f in progression))
+        print(scenario.id, progression.count(), any(f >= 1.0 for _, f in progression))
         scenarios_fitnesses.append([score for _, score in progression])
 
     n = n or max(map(len, scenarios_fitnesses))
@@ -81,8 +81,8 @@ def plot(db: Db, show=True, n=None):
 
 
 if __name__ == '__main__':
-    problem_dir = 'replicate_mosaic/'
-    db_file = '2016-11-21 01:36:38.266342.db'
+    problem_dir = 'generate_swiss_flag/'
+    db_file = '2016-11-15 16:04:10.731464.db'
 
     THIS_FILE = os.path.abspath(__file__)
     RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))
@@ -91,4 +91,4 @@ if __name__ == '__main__':
 
     print(db_path)
     db = get_db(db_path)
-    plot(db, n=25, show=False)
+    plot(db, show=True)
