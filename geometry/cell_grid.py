@@ -1,6 +1,9 @@
 from collections import defaultdict
 from operator import itemgetter
 
+import numpy
+from numpy.lib.twodim_base import rot90, fliplr, flipud
+
 from geometry.neighbourhoods import LCR, VON_NEUMANN, radius_1d, radius_2d
 from utils import tuple_add
 
@@ -68,7 +71,7 @@ class CellGrid(defaultdict):
         return ((coord, cell) for (coord, cell) in self.items() if cell != self.dead_cell)
 
     def __hash__(self):
-        return hash(self.get_live_cells())
+        return hash(tuple(self.get_live_cells()))
 
 
 class CellGrid1D(CellGrid):
@@ -280,3 +283,72 @@ class ToroidalCellGrid2D(FiniteCellGrid2D):
 
     def get(self, coord, default=None):
         return super().get(self.get_absolute_coord(coord), default=default)
+
+    def get_rotation(self, k=1):
+        copy = self.empty_copy()
+
+        copy.add_pattern_at_coord(rot90(self.get_whole(), k=k), (0, 0))
+
+        return copy
+
+    def get_fliplr(self):
+        lr = self.empty_copy()
+        lr.add_pattern_at_coord(fliplr(self.get_whole()), (0, 0))
+        return lr
+
+    def get_flipud(self):
+        ud = self.empty_copy()
+        ud.add_pattern_at_coord(flipud(self.get_whole()), (0, 0))
+        return ud
+
+
+def get_all_rotations_and_flips(r0):
+    r1 = r0.get_rotation(k=1)
+    r2 = r0.get_rotation(k=2)
+    r3 = r0.get_rotation(k=3)
+
+    return (
+        r0, r0.get_fliplr(), r0.get_flipud(),
+        r1, r1.get_fliplr(), r1.get_flipud(),
+        r2, r2.get_fliplr(), r2.get_flipud(),
+        r3, r3.get_fliplr(), r3.get_flipud()
+    )
+
+
+def get_rotational_hash(r0):
+    return hash(
+        sum(
+            map(lambda x: x.__hash__(), get_all_rotations_and_flips(r0))
+        )
+    )
+
+
+if __name__ == '__main__':
+    grid = ToroidalCellGrid2D(cell_states='01', x_range=(0, 5), y_range=(0, 5))
+    grid.add_pattern_at_coord(
+        [
+            ['1', '0', '1', '1', '0'],
+            ['1', '0', '1', '0', '1'],
+            ['1', '0', '1', '0', '1'],
+            ['1', '0', '1', '0', '1'],
+            ['1', '0', '1', '1', '0'],
+        ],
+        (0, 0)
+    )
+    h0 = get_rotational_hash(grid)
+    h1 = get_rotational_hash(grid.get_rotation())
+    assert h0 == h1
+
+    g2 = ToroidalCellGrid2D(cell_states='01', x_range=(0, 5), y_range=(0, 5))
+    g2.add_pattern_at_coord(
+        [
+            ['0', '1', '1', '0', '1'],
+            ['1', '0', '1', '0', '1'],
+            ['1', '0', '1', '0', '1'],
+            ['1', '0', '1', '0', '1'],
+            ['0', '1', '1', '0', '1'],
+        ],
+        (0, 0)
+    )
+
+    assert get_rotational_hash(g2) == h0

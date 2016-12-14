@@ -16,16 +16,18 @@ def iterate_ca(grid: CellGrid, transition_f) -> CellGrid:
     return new
 
 
-def n_iterations(initial_grid: CellGrid, transition_f, n: int) -> Iterator[CellGrid]:
+def n_iterations(initial_grid: CellGrid, transition_f, n: int, cycle_check=True) -> Iterator[CellGrid]:
     grid = initial_grid
 
-    seen = {initial_grid}
+    if cycle_check:
+        seen = {initial_grid}
 
     for _ in range(n):
         new = iterate_ca(grid, transition_f=transition_f)
 
-        if new in seen:
-            # found a cycle
+        if cycle_check and new in seen:
+            # found a cycle, yield one more and stop
+            yield new
             return
         else:
             yield new
