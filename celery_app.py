@@ -15,4 +15,5 @@ app = celery.Celery('celery_app', config_source='celeryconfig', include=(
     'stagnation',
     'config',
     'patterns',
+    'report',
 ))

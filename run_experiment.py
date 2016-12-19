@@ -10,6 +10,7 @@ from sqlalchemy.sql.functions import now
 from add_dill import add_dill
 from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
+from report import send_message_via_pushbullet
 from run_neat import (create_initial_population, neat_reproduction,
                       sort_into_species, speciate)
 from stagnation import (get_fitnesses_by_species_by_generation,
@@ -88,7 +89,9 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     optimal_found = (neat_config.stop_when_optimal_found and session.query(optimal_solution.exists()).scalar())
 
     if (next_gen == scenario.generations) or optimal_found:
-        logging.info('Scenario {} finished after {} generations'.format(scenario_id, next_gen))
+        msg = 'Scenario {} finished after {} generations'.format(scenario_id, next_gen)
+        send_message_via_pushbullet.delay(title=db_path, body=msg)
+        logging.info(msg)
         return
 
     species = sort_into_species([individual.genotype for individual in population])
@@ -109,9 +112,16 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         )]
 
     if not alive_species:
+        send_message_via_pushbullet(
+            title='Halted: {}'.format(scenario.description),
+            body='Complete extinction for scenario {} at generation {}'.format(
+                scenario_id,
+                generation_n,
+            ),
+        )
         raise CompleteExtinctionException
 
-    new_species, new_genotypes = neat_reproduction(
+    next_gen_species, nex_gen_genotypes = neat_reproduction(
         species=alive_species,
         pop_size=scenario.population_size,
         survival_threshold=neat_config.survival_threshold,
@@ -120,16 +130,16 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     )
 
     species = speciate(
-        new_genotypes,
+        nex_gen_genotypes,
         compatibility_threshold=neat_config.compatibility_threshold,
-        existing_species=new_species
+        existing_species=next_gen_species
     )
 
     initialize_generation(
         db_path=db_path,
         scenario_id=scenario_id,
         generation=next_gen,
-        genotypes=new_genotypes,
+        genotypes=nex_gen_genotypes,
         fitness_f=fitness_f,
         pair_selection_f=pair_selection_f,
         neat_config=neat_config,
@@ -139,7 +149,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     logging.info('Finished generation {gen} of scenario {scen}: {pop} individuals / {species} species'.format(
         gen=generation_n,
         scen=scenario_id,
-        pop=len(new_genotypes),
+        pop=len(nex_gen_genotypes),
         species=len(species),
     ))
     return generation_n
