@@ -3,7 +3,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative.api import declarative_base
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.schema import Column, ForeignKey
-from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, String, PickleType
+from sqlalchemy.sql.sqltypes import (DateTime, Float, Integer, PickleType,
+                                     String)
 
 Base = declarative_base()
 
@@ -11,7 +12,7 @@ Base = declarative_base()
 class Scenario(Base):
     __tablename__ = 'scenarios'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     description = Column(String)
     generations = Column(Integer)
     population_size = Column(Integer)
@@ -20,12 +21,12 @@ class Scenario(Base):
 class Individual(Base):
     __tablename__ = 'individuals'
 
-    scenario_id = Column(Integer, ForeignKey('scenarios.id'), primary_key=True)
+    scenario_id = Column(Integer, ForeignKey('scenarios.id'), primary_key=True, index=True)
     individual_number = Column(Integer, primary_key=True)
-    generation = Column(Integer, primary_key=True)
+    generation = Column(Integer, primary_key=True, index=True)
     genotype = Column(PickleType(pickler=dill))
-    fitness = Column(Float)
-    timestamp = Column(DateTime)
+    fitness = Column(Float, index=True)
+    timestamp = Column(DateTime, index=True)
 
 
 class Db:
@@ -58,7 +59,7 @@ class Db:
         if session is None:
             session = self.Session()
 
-        return session.query(Scenario).all()
+        return session.query(Scenario)
 
     def get_scenario(self, scenario_id, session=None):
         if session is None:
