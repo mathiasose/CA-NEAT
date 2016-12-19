@@ -69,7 +69,7 @@ if __name__ == '__main__':
         gens=NEAT_CONFIG.generations
     )
 
-    for _ in range(100):
+    for _ in range(25):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
