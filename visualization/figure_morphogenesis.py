@@ -22,9 +22,9 @@ seen = set()
 if __name__ == '__main__':
     seaborn.set(style='white')
 
-    from problems.generate_swiss_flag import CA_CONFIG
+    from problems.generate_tricolor import CA_CONFIG
 
-    problem_name, db_file = ('generate_swiss_flag', '2016-11-18 21:48:15.168123.db')
+    problem_name, db_file = ('generate_tricolor', '2016-12-04 18:09:12.299816.db')
 
     db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
     db = get_db(db_path)
@@ -87,6 +87,7 @@ if __name__ == '__main__':
 
         print('show', individual.scenario_id, individual.generation, individual.individual_number)
         fig = plt.figure()
+        plt.title('\t'.join(map(str, [individual.scenario_id, individual.generation, individual.individual_number])))
 
         (l, r), (t, b) = x_range, y_range
         extent = (l, r, b, t)

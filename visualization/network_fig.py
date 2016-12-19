@@ -34,7 +34,7 @@ def draw_net(genome, view=False, filename=None, show_disabled=True, prune_unused
             input_attrs['fillcolor'] = 'lightgray'
             in_hidden_node = str(ng_id) + '_in'
             node_id = str(ng_id)
-            dot.node(in_hidden_node, label='', _attributes=INVISIBLE_NODE)
+            dot.node(in_hidden_node, label=str(ng_id), _attributes=INVISIBLE_NODE)
             dot.node(node_id, label=label, _attributes=input_attrs)
             dot.edge(in_hidden_node, node_id)
 
@@ -50,7 +50,7 @@ def draw_net(genome, view=False, filename=None, show_disabled=True, prune_unused
             node_id = str(ng_id)
             sg = graphviz.Digraph()
             sg.node(node_id, label=label, _attributes=node_attrs)
-            sg.node(out_hidden_node, label='', _attributes=INVISIBLE_NODE)
+            sg.node(out_hidden_node, label=str(ng_id), _attributes=INVISIBLE_NODE)
             sg.edge(node_id, out_hidden_node)
             dot.subgraph(sg)
 

@@ -12,6 +12,7 @@ from ca.iterate import n_iterations
 from database import Individual, get_db
 from geometry.cell_grid import ToroidalCellGrid2D
 from utils import PROJECT_ROOT, create_state_normalization_rules
+from visualization.colors import colormap, norm
 from visualization.network_fig import draw_net
 
 INTERVAL = 5
@@ -21,11 +22,10 @@ if __name__ == '__main__':
 
     from problems.generate_tricolor import CA_CONFIG
 
-    problem_name = 'generate_tricolor'
-    db_file = '2016-12-04 18:09:12.299816.db'
-    scenario_id = 1
-    generation_n = 2
-    individual_n = 86
+    problem_name, db_file = ('generate_tricolor', '2016-12-04 18:09:12.299816.db')
+    scenario_id = 47
+    generation_n = 301
+    individual_n = 100
 
     db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
     db = get_db(db_path)
@@ -82,14 +82,10 @@ if __name__ == '__main__':
 
     fig = plt.figure()
 
-    n_colors = len(CA_CONFIG.alphabet)
-    colormap = ListedColormap(seaborn.color_palette('colorblind', n_colors=n_colors), N=n_colors)
 
     (l, r), (t, b) = x_range, y_range
     extent = (l, r, b, t)
 
-    bounds = list(range(0, len(initial_grid.cell_states) + 1))
-    norm = BoundaryNorm(bounds, n_colors)
     im = plt.imshow(
         initial_grid.get_enumerated_rectangle(x_range=x_range, y_range=y_range),
         extent=extent,
@@ -114,9 +110,9 @@ if __name__ == '__main__':
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(grid_iterations), interval=500, blit=True)
     file_descriptor = '{}_{}'.format(problem_name, db_file.replace('.db', ''))
     output_path = '{}_gen{}_ind{}'.format(file_descriptor, generation_n, individual_n)
-    # anim.save(output_path + '.gif', writer='imagemagick', fps=1)
+    #anim.save(output_path + '.gif', writer='imagemagick', fps=1)
     plt.show()
-    exit(0)
+
     print(genotype)
     print(dict((k, v) for k, v in
                (zip((str(k) for (k, v) in genotype.node_genes.items() if v.type == 'OUTPUT'), CA_CONFIG.alphabet))))

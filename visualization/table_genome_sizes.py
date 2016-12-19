@@ -40,6 +40,7 @@ if __name__ == '__main__':
         ('replicate_tricolor', '2016-11-21 17:29:01.273816.db'),
         #('replicate_norwegian_flag', '2016-11-25 14:55:53.727034.db'),
     ]:
+        print(problem_name)
         db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
         db = get_db(db_path)
         session = db.Session()
@@ -50,11 +51,11 @@ if __name__ == '__main__':
         ccs = [conns for nodes, conns in sizetups]
         acs = [nodes + conns for nodes, conns in sizetups]
 
-        for cs, label in zip([ncs, ccs, acs, ], ['Nodes', 'Connections', 'Both']):
+        for cs, label in zip([ncs, ccs, acs, ], ['Hidden nodes', 'Connections', 'Both']):
             s = '{} ({} results)'.format(problem_name, len(sizetups))
             modess, n = modes(cs)
             s1 = '{} ({} occurrences)'.format(', '.join(map(str, modess)), n)
-            table.append([s, label, min(cs), max(cs), mean(cs), median(cs), s1, pstdev(cs)])
+            table.append([s, label, min(cs), max(cs), round(mean(cs), 1), median(cs), s1, round(pstdev(cs), 1)])
         table.append([])
 
 
