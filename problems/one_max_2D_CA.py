@@ -9,22 +9,26 @@ from visualization.plot_fitness import plot_fitnesses_over_generations
 
 
 def fitness(phenotype, **kwargs):
-    from geometry.cell_grid import CellGrid2D
+    from geometry.cell_grid import FiniteCellGrid2D
     from ca.iterate import n_iterations
 
     neighbourhood = kwargs.get('neighbourhood')
     alphabet = kwargs.get('alphabet')
 
-    initial = CellGrid2D(
+    r = 5
+
+    initial = FiniteCellGrid2D(
         cell_states=alphabet,
         neighbourhood=neighbourhood,
-        values=(((0, 0), '1'),)
+        x_range=(-r, r),
+        y_range=(-r, r),
+        values={(0, 0): '1'}
     )
 
     transition_f = lambda k: phenotype[tuple(k)]
     grid = n_iterations(initial_grid=initial, transition_f=transition_f, n=10)
 
-    return sum(sum(int(x) for x in row) for row in grid.get_rectangle((-5, 4), (-5, 4))) / 100
+    return sum(sum(int(x) for x in row) for row in grid.get_whole()) / grid.area
 
 
 def geno_to_pheno_f(genotype, **kwargs):
@@ -52,7 +56,7 @@ if __name__ == '__main__':
     CROSSOVER_F = splice
     MUTATION_F = mutation_f
 
-    DB_DIR = 'db/'
+    DB_DIR = 'db/1maxCA/'
     DB_PATH = os.path.join('sqlite:///', DB_DIR, '{}.db'.format(datetime.now()))
 
     DESCRIPTION = '"Max one 2D CA"\npopulation size: {}\ngenerations: {}'.format(POPULATION_SIZE, N_GENERATIONS)

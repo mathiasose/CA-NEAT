@@ -54,12 +54,9 @@ def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
         if not partial_matches:
             continue
 
-        while len(partial_matches) < wanted_occurrences:
-            partial_matches.append(0.0)
-
-        best_n_matches = sorted(partial_matches, reverse=True)[:wanted_occurrences]
-
-        assert len(best_n_matches) == wanted_occurrences
+        sorted_matches = sorted(partial_matches, reverse=True)
+        extension = [0.0] * wanted_occurrences
+        best_n_matches = (sorted_matches + extension)[:wanted_occurrences]
 
         # to encourage perfect replicas we penalize imperfect replicas a little bit extra
         # so that the difference between perfect and near-perfect is greater

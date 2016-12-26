@@ -22,7 +22,7 @@ class Individual(Base):
     __tablename__ = 'individuals'
 
     scenario_id = Column(Integer, ForeignKey('scenarios.id'), primary_key=True, index=True)
-    individual_number = Column(Integer, primary_key=True)
+    individual_number = Column(Integer, primary_key=True, index=True)
     generation = Column(Integer, primary_key=True, index=True)
     genotype = Column(PickleType(pickler=dill))
     fitness = Column(Float, index=True)
@@ -50,7 +50,6 @@ class Db:
             session = self.Session()
 
         session.add(individual)
-
         session.commit()
 
         return individual
@@ -80,6 +79,12 @@ class Db:
 
         return self.get_individuals(scenario_id, session) \
             .filter(Individual.generation == generation)
+
+    def is_scenario_success(self, scenario_id, session=None):
+        if session is None:
+            session = self.Session()
+
+        return self.get_individuals(scenario_id, session=session).filter(Individual.fitness >= 1.0).count() >= 1
 
 
 def get_db(path):

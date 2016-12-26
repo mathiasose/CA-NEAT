@@ -1,7 +1,6 @@
-from statistics import mean, stdev
-
 from operator import attrgetter
-from random import random, choice, sample
+from random import choice, random, sample
+from statistics import mean, stdev
 
 
 class TooFewIndividuals(Exception):

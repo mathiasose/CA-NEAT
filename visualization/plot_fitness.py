@@ -82,18 +82,19 @@ def plot_fitnesses_over_generations(db: Db, scenario_id: int, title=None, interv
 
 
 if __name__ == '__main__':
-    problem_dir = 'generate_swiss_flag'
-    db_file = '2016-11-18 21:32:53.149436.db'
+    problem_name = 'generate_border'
+    db_file = '2016-11-23 13:51:24.771958.db'
+    scenario_id = 47
 
     THIS_FILE = os.path.abspath(__file__)
     RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))
-    file = os.path.join(RESULTS_DIR, problem_dir, db_file)
+    file = os.path.join(RESULTS_DIR, problem_name, db_file)
     db_path = 'sqlite:///{}'.format(file)
 
     print(db_path)
     db = get_db(db_path)
-    for scenario in db.get_scenarios():
+    for scenario in [scenario_id]:
         try:
-            plot_fitnesses_over_generations(db, scenario_id=scenario.id, interval=300)
+            plot_fitnesses_over_generations(db, scenario_id=scenario_id, interval=300)
         except TclError:
             pass

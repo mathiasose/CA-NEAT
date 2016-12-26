@@ -1,8 +1,7 @@
-import os
-from string import ascii_lowercase, ascii_uppercase
-
 import operator
+import os
 from random import choice, getrandbits, randrange
+from string import ascii_lowercase, ascii_uppercase
 
 PROJECT_ROOT = os.path.abspath(
     os.path.join(__file__, '..')
@@ -68,3 +67,7 @@ def create_state_normalization_rules(states, range=(-1, 1)) -> dict:
     step = (hi - lo) / n_states
 
     return {s: lo + i * step for i, s in enumerate(states)}
+
+if __name__ == '__main__':
+    d = create_state_normalization_rules('abcd')
+    print(d.items())

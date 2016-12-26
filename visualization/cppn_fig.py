@@ -12,24 +12,21 @@ config.input_nodes = 2
 config.output_nodes = 1
 
 
-def cppn_fig(cppn, r, c=1):
+def cppn_fig(cppn, r, c):
+    plt.figure()
     f = lambda *args: cppn.serial_activate(args)[0]
     grid = tuple(
         tuple(
-            f(x / c, y / c) for x in range(-r * c, r * c)
-        ) for y in range(-r * c, r * c)
+            f(x / c, y / c) for x in range(-r, r + 1)
+        ) for y in range(-r, r + 1)
     )
-    print(*grid, sep='\n')
-    print(min(min(row) for row in grid))
-    print(max(max(row) for row in grid))
 
     plt.imshow(
         grid,
-        interpolation='nearest',
+        interpolation='none',
         extent=(-r, r, -r, r),
-        cmap=ListedColormap(seaborn.color_palette('bright'))
+        cmap=ListedColormap(seaborn.color_palette('Blues'))
     )
-    plt.show()
 
 
 if __name__ == '__main__':
@@ -61,4 +58,8 @@ if __name__ == '__main__':
     seaborn.set(style='white')
 
     pt = create_feed_forward_phenotype(genome)
-    cppn_fig(pt, r=10)
+
+    cppn_fig(pt, r=10, c=10)
+    cppn_fig(pt, r=20, c=10)
+    cppn_fig(pt, r=20, c=20)
+    plt.show()

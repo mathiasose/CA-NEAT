@@ -25,7 +25,7 @@ def fitness_f(phenotype, ca_config: CAConfig):
     )
 
     from utils import make_step_f
-    step = make_step_f(0.5)
+    step = make_step_f(n=2)
 
     def transition_f(args):
         t = tuple(int(x) for x in args)

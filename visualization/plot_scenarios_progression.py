@@ -81,8 +81,7 @@ def plot(db: Db, show=True, n=None):
 
 
 if __name__ == '__main__':
-    problem_dir = 'generate_swiss_flag/'
-    db_file = '2016-11-15 16:04:10.731464.db'
+    problem_dir, db_file = ('generate_swiss_flag', '2016-11-18 21:48:15.168123.db')
 
     THIS_FILE = os.path.abspath(__file__)
     RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))

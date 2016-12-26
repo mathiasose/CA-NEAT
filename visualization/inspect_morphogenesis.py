@@ -82,7 +82,6 @@ if __name__ == '__main__':
 
     fig = plt.figure()
 
-
     (l, r), (t, b) = x_range, y_range
     extent = (l, r, b, t)
 
@@ -110,7 +109,8 @@ if __name__ == '__main__':
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(grid_iterations), interval=500, blit=True)
     file_descriptor = '{}_{}'.format(problem_name, db_file.replace('.db', ''))
     output_path = '{}_gen{}_ind{}'.format(file_descriptor, generation_n, individual_n)
-    #anim.save(output_path + '.gif', writer='imagemagick', fps=1)
+
+    # anim.save(output_path + '.gif', writer='imagemagick', fps=1)
     plt.show()
 
     print(genotype)

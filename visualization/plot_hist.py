@@ -34,16 +34,16 @@ def plot_generations_until_optimal(db: Db):
     for n, group in groupby(gens, lambda x: x):
         print(n, '-' * len(tuple(group)))
 
-    n = max(gens)
-    ax.hist(gens, bins=n, range=(0, n), cumulative=True)
+    n = max(gens) + 1
+    ax.hist(gens, bins=(n // 10) + 1, range=(0, n), cumulative=False)
     plt.show(block=True)
 
     return plt
 
 
 if __name__ == '__main__':
-    problem_dir = 'replicate_mosaic/'
-    db_file = '2016-11-16 20:49:47.478567.db'
+    problem_dir = 'generate_border/'
+    db_file = '2016-11-23 02:58:19.655974.db'
 
     THIS_FILE = os.path.abspath(__file__)
     RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))

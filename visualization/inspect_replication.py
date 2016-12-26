@@ -21,13 +21,13 @@ INTERVAL = 5
 if __name__ == '__main__':
     seaborn.set(style='white')
 
-    from problems.replicate_tricolor import CA_CONFIG
+    from problems.replicate_mosaic import CA_CONFIG
 
-    problem_name = 'replicate_tricolor'
-    db_file = '2016-11-17 01:49:31.672541.db'
-    scenario_id = 46
-    individual_n = 64
-    generation_n = 8
+    problem_name = 'replicate_mosaic'
+    db_file = '2016-11-21 01:36:38.266342.db'
+    scenario_id = 34
+    individual_n = 31
+    generation_n = 0
 
     db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
     db = get_db(db_path)
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     # anim.save(output_path + '.gif', writer='imagemagick', fps=1)
     plt.show()
 
-    exit(0)
+
     print(genotype)
     print(dict((k, v) for k, v in
                (zip((str(k) for (k, v) in genotype.node_genes.items() if v.type == 'OUTPUT'), CA_CONFIG.alphabet))))

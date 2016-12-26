@@ -54,6 +54,7 @@ NEAT_CONFIG.prob_mutate_activation = 0.002
 NEAT_CONFIG.prob_toggle_link = 0.01
 
 PAIR_SELECTION_F = sigma_scaled
+FITNESS_F = morphogenesis_fitness_f
 
 if __name__ == '__main__':
     THIS_FILE = os.path.abspath(__file__)
@@ -62,7 +63,8 @@ if __name__ == '__main__':
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
 
-    DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
+    DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format('2016-11-23 13:51:24.771958'))
+    #DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
 
     DESCRIPTION = '"Border morphogenesis"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,
@@ -73,7 +75,7 @@ if __name__ == '__main__':
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
-            fitness_f=morphogenesis_fitness_f,
+            fitness_f=FITNESS_F,
             pair_selection_f=PAIR_SELECTION_F,
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,
