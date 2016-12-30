@@ -5,15 +5,15 @@ from celery.app import shared_task
 from neat.genome import Genome
 from neat.nn import create_feed_forward_phenotype
 from neat.population import CompleteExtinctionException
+from ga.population import (create_initial_population, neat_reproduction,
+                           sort_into_species, speciate)
 from sqlalchemy.sql.functions import now
 
 from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
+from ga.stagnation import (get_fitnesses_by_species_by_generation,
+                           is_species_stagnant)
 from report import send_message_via_pushbullet
-from run_neat import (create_initial_population, neat_reproduction,
-                      sort_into_species, speciate)
-from stagnation import (get_fitnesses_by_species_by_generation,
-                        is_species_stagnant)
 
 
 def initialize_scenario(db_path: str, description: str, fitness_f, pair_selection_f,

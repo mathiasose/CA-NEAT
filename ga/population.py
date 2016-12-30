@@ -1,13 +1,13 @@
 import math
-import random
 from typing import Iterator, List, Tuple
 from uuid import uuid4
 
+import random
 from neat.genome import Genome
 from neat.species import Species
 
 from config import CPPNNEATConfig
-from selection import TooFewIndividuals, random_choice
+from ga.selection import TooFewIndividuals, random_choice
 
 
 def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
@@ -19,7 +19,18 @@ def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
         if hidden_nodes:
             g.add_hidden_nodes(hidden_nodes)
 
-        g.connect_partial(fraction=0.5 * (1 + random.random()))
+        if neat_config.initial_connection == 'fs_neat':
+            g.connect_fs_neat()
+        elif neat_config.initial_connection == 'fully_connected':
+            g.connect_full()
+        elif neat_config.initial_connection == 'partial':
+            if isinstance(neat_config.connection_fraction, callable):
+                fraction = neat_config.connection_fraction()
+            else:
+                fraction = neat_config.connection_fraction
+
+            g.connect_partial(fraction)
+
         yield g
 
 

@@ -1,15 +1,13 @@
 import celery
 
 app = celery.Celery('celery_app', config_source='celeryconfig', include=(
-    'run_experiment',
-    'run_neat',
     'ca',
-    'problems',
+    'ga',
     'geometry',
-    'utils',
-    'selection',
-    'stagnation',
-    'config',
     'patterns',
+    'problems',
+    'run_experiment',
+    'utils',
+    'config',
     'report',
 ))

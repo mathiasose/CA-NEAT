@@ -1,12 +1,13 @@
-import os
 from datetime import datetime
 
+import os
+
 from config import CAConfig, CPPNNEATConfig
+from ga.selection import sigma_scaled
 from geometry.neighbourhoods import VON_NEUMANN
 from patterns.patterns import ALPHABET_2, MOSAIC, QUIESCENT, pad_pattern
 from problems.common import replication_fitness_f
 from run_experiment import initialize_scenario
-from selection import sigma_scaled
 
 CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = ALPHABET_2

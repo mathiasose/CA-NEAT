@@ -1,8 +1,9 @@
-import os
 from datetime import datetime
 
+import os
+
+from ga.selection import fitness_proportionate
 from run_experiment import initialize_scenario
-from selection import fitness_proportionate
 from utils import mutate_bit, random_bitstring, splice
 
 if __name__ == '__main__':

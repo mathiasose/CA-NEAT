@@ -1,9 +1,10 @@
-import os
 from datetime import datetime
 
+import os
+
+from ga.selection import sigma_scaled
 from geometry.neighbourhoods import VON_NEUMANN
 from run_experiment import initialize_scenario
-from selection import sigma_scaled
 from utils import random_string, splice
 from visualization.plot_fitness import plot_fitnesses_over_generations
 
