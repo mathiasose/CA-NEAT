@@ -1,11 +1,10 @@
-from datetime import datetime
-
 import os
+from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from ga.selection import sigma_scaled
 from geometry.neighbourhoods import VON_NEUMANN
-from patterns.patterns import ALPHABET_2, SEED_5X5, MOSAIC
+from patterns.patterns import ALPHABET_2, MOSAIC, SEED_5X5
 from problems.common import morphogenesis_fitness_f
 from run_experiment import initialize_scenario
 

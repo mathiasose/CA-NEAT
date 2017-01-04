@@ -1,11 +1,10 @@
-from datetime import datetime
-
 import os
+from datetime import datetime
 
 from config import CAConfig, CPPNNEATConfig
 from ga.selection import sigma_scaled
 from geometry.neighbourhoods import VON_NEUMANN
-from patterns.patterns import ALPHABET_4, NORWEGIAN, pad_pattern, QUIESCENT
+from patterns.patterns import ALPHABET_4, NORWEGIAN, QUIESCENT, pad_pattern
 from problems.common import replication_fitness_f
 from run_experiment import initialize_scenario
 

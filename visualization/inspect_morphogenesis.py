@@ -1,12 +1,12 @@
+import os
+from operator import itemgetter
 from typing import T, Tuple
 
-import os
 import seaborn
-from matplotlib import animation
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib import animation
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
-from operator import itemgetter
 
 from ca.iterate import iterate_ca_n_times_or_until_cycle_found
 from database import Individual, get_db

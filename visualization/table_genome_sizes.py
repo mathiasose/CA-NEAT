@@ -1,21 +1,21 @@
+import os
 from collections import Counter
 from itertools import groupby
-from statistics import mean, median, mode, stdev, pstdev, pvariance, StatisticsError
+from operator import itemgetter
+from statistics import (StatisticsError, mean, median, mode, pstdev, pvariance,
+                        stdev)
 from typing import T, Tuple
 
-import os
 import seaborn
-from matplotlib import animation
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib import animation
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
-from operator import itemgetter
-
-from tabulate import tabulate
 
 from ca.iterate import iterate_ca_n_times_or_until_cycle_found
 from database import Individual, get_db
 from geometry.cell_grid import ToroidalCellGrid2D
+from tabulate import tabulate
 from utils import PROJECT_ROOT, create_state_normalization_rules
 from visualization.network_fig import draw_net
 

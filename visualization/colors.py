@@ -1,4 +1,4 @@
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from seaborn.palettes import color_palette
 
 n_colors = 4

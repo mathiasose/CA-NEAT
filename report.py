@@ -1,10 +1,10 @@
 import os
-from celery.app import shared_task
 from io import BytesIO
+
+from celery.app import shared_task
 from pushbullet import Pushbullet
 
 from run_experiment import get_db
-from visualization.plot_fitness import plot_fitnesses_over_generations
 
 try:
     from secrets import PUSHBULLET_API_KEY

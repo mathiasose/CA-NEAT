@@ -1,8 +1,7 @@
 from collections import defaultdict
 from operator import itemgetter
 
-import numpy
-from numpy.lib.twodim_base import rot90, fliplr, flipud
+from numpy.lib.twodim_base import fliplr, flipud, rot90
 
 from geometry.neighbourhoods import LCR, VON_NEUMANN, radius_1d, radius_2d
 from utils import tuple_add

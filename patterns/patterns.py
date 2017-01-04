@@ -1,7 +1,5 @@
 from typing import T, Tuple
 
-from visualization.colors import colormap, norm
-
 QUIESCENT = ' '
 ALPHABET_2 = (QUIESCENT, '■',)
 ALPHABET_3 = ALPHABET_2 + ('□',)
@@ -95,6 +93,7 @@ def pad_pattern(pattern: Tuple[Tuple[T]], dead_cell: T, n=1) -> Tuple[Tuple[T]]:
 
 
 if __name__ == '__main__':
+    from visualization.colors import colormap, norm
     from matplotlib import pyplot as plt
 
     import seaborn

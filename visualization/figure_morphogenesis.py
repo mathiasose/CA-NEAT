@@ -1,18 +1,20 @@
+import os
+from math import sqrt
+from operator import itemgetter
 from typing import T, Tuple
 
-import os
 import seaborn
-from math import sqrt
-from matplotlib import animation
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib import animation
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.ticker import MultipleLocator
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
-from operator import itemgetter
 
 from ca.iterate import iterate_ca_n_times_or_until_cycle_found
 from database import Individual, get_db
-from geometry.cell_grid import ToroidalCellGrid2D, get_all_rotations_and_flips, get_rotational_hash
+from geometry.cell_grid import (ToroidalCellGrid2D,
+                                get_all_rotations_and_flips,
+                                get_rotational_hash)
 from utils import PROJECT_ROOT, create_state_normalization_rules
 from visualization.colors import colormap, norm
 from visualization.network_fig import draw_net

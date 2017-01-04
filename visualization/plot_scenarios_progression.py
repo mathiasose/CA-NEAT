@@ -1,12 +1,11 @@
-from statistics import mean, median
-
 import os
+from statistics import mean, median
 
 import matplotlib.pyplot as plt
 import seaborn
 from sqlalchemy.sql.functions import func
 
-from database import Db, Individual, get_db, Scenario
+from database import Db, Individual, Scenario, get_db
 from utils import PROJECT_ROOT
 
 seaborn.set_style('white')
