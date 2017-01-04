@@ -1,23 +1,31 @@
 import logging
+from collections import defaultdict
 from typing import List
 
 from celery.app import shared_task
 from neat.genome import Genome
 from neat.nn import create_feed_forward_phenotype
 from neat.population import CompleteExtinctionException
-from ga.population import (create_initial_population, neat_reproduction,
-                           sort_into_species, speciate)
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.sql.functions import now
 
 from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
-from ga.stagnation import (get_fitnesses_by_species_by_generation,
-                           is_species_stagnant)
+from ga.population import (create_initial_population, neat_reproduction,
+                           sort_into_species, speciate)
+from ga.stagnation import is_species_stagnant
 from report import send_message_via_pushbullet
+
+AUTO_RETRY = {
+    'autoretry_for': (OperationalError,),
+    'retry_kwargs': {'countdown': 5},
+}
 
 
 def initialize_scenario(db_path: str, description: str, fitness_f, pair_selection_f,
                         neat_config: CPPNNEATConfig, ca_config: CAConfig):
+    print(db_path)
+
     db = get_db(db_path)
     session = db.Session()
     scenario = db.save_scenario(scenario=Scenario(
@@ -25,6 +33,7 @@ def initialize_scenario(db_path: str, description: str, fitness_f, pair_selectio
         generations=neat_config.generations,
         population_size=neat_config.pop_size
     ), session=session)
+    session.commit()
 
     assert scenario
 
@@ -41,8 +50,6 @@ def initialize_scenario(db_path: str, description: str, fitness_f, pair_selectio
         neat_config=neat_config,
         ca_config=ca_config,
     )
-
-    session.flush()
 
     return scenario
 
@@ -69,14 +76,12 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
     chord(grouped_tasks, final_task)()
 
 
-@shared_task(name='finalize_generation', bind=True)
+@shared_task(name='finalize_generation', bind=True, **AUTO_RETRY)
 def finalize_generation(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f, pair_selection_f,
                         neat_config: CPPNNEATConfig, ca_config: CAConfig):
-    """
-    'results' is return values of preceding group of tasks, can safely be ignored
-    """
     db = get_db(db_path)
     session = db.Session()
+    session.bulk_save_objects(results)
     scenario = db.get_scenario(scenario_id, session=session)
     population = db.get_generation(scenario_id, generation_n, session=session)
 
@@ -97,13 +102,20 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     if (not stagnation_limit) or (generation_n < stagnation_limit):
         alive_species = species
     else:
-        total_fitnesses_by_species_by_generation = get_fitnesses_by_species_by_generation(
-            db=db,
-            scenario_id=scenario_id,
-            generation_range=(generation_n - stagnation_limit, next_gen),
-        )
+        # TODO can this be rewritten to one query?
+        generation_range = (generation_n - stagnation_limit, next_gen)
+        fitnesses_by_species_by_generation = []
+        for n in range(*generation_range):
+            generation = db.get_generation(scenario_id=scenario_id, generation=n, session=session)
+            fitnesses_by_species = defaultdict(list)
+
+            for individual in generation:
+                fitnesses_by_species[individual.genotype.species_id].append(individual.fitness)
+
+            fitnesses_by_species_by_generation.append(fitnesses_by_species)
+
         alive_species = [s for s in species if not is_species_stagnant(
-            fitnesses_by_species_by_generation=total_fitnesses_by_species_by_generation,
+            fitnesses_by_species_by_generation=fitnesses_by_species_by_generation,
             species_id=s.ID,
             stagnation_limit=stagnation_limit,
         )]
@@ -132,6 +144,8 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         existing_species=next_gen_species
     )
 
+    session.commit()
+
     initialize_generation(
         db_path=db_path,
         scenario_id=scenario_id,
@@ -143,16 +157,10 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         ca_config=ca_config,
     )
 
-    logging.info('Finished generation {gen} of scenario {scen}: {pop} individuals / {species} species'.format(
-        gen=generation_n,
-        scen=scenario_id,
-        pop=len(nex_gen_genotypes),
-        species=len(species),
-    ))
-    return generation_n
+    return f'{scenario}, generation {generation_n}, {len(nex_gen_genotypes)} individuals, {len(alive_species)} species'
 
 
-@shared_task(name='handle_individual')
+@shared_task(name='handle_individual', **AUTO_RETRY)
 def handle_individual(db_path: str, scenario_id: int, generation: int, individual_number: int, genotype: Genome,
                       fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
     phenotype = create_feed_forward_phenotype(genotype)
@@ -175,11 +183,4 @@ def handle_individual(db_path: str, scenario_id: int, generation: int, individua
         timestamp=now()
     )
 
-    get_db(db_path).save_individual(individual)
-
-    return 'Scenario {}, generation {}, individual {}, fitness {}'.format(
-        scenario_id,
-        generation,
-        individual_number,
-        fitness
-    )
+    return individual

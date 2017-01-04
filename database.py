@@ -17,6 +17,9 @@ class Scenario(Base):
     generations = Column(Integer)
     population_size = Column(Integer)
 
+    def __repr__(self):
+        return f'Scenario {self.id}'
+
 
 class Individual(Base):
     __tablename__ = 'individuals'
@@ -27,6 +30,12 @@ class Individual(Base):
     genotype = Column(PickleType(pickler=dill))
     fitness = Column(Float, index=True)
     timestamp = Column(DateTime, index=True)
+
+    def __repr__(self):
+        return f'Scenario {self.scenario_id}, ' \
+               f'generation {self.generation}, ' \
+               f'individual {self.individual_number}, ' \
+               f'fitness {self.fitness}'
 
 
 class Db:

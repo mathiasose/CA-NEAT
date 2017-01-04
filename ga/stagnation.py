@@ -1,25 +1,5 @@
-from collections import defaultdict
 from statistics import mean
-from typing import List, Tuple
-
-from database import Db
-
-
-def get_fitnesses_by_species_by_generation(db: Db, scenario_id: int, generation_range: Tuple[int, int]):
-    """
-    Create a data structure holding information about total fitness for each species for each generation
-    """
-    fitnesses_by_species_by_generation = []
-    for n in range(*generation_range):
-        generation = db.get_generation(scenario_id=scenario_id, generation=n)
-        fitnesses_by_species = defaultdict(list)
-
-        for individual in generation:
-            fitnesses_by_species[individual.genotype.species_id].append(individual.fitness)
-
-        fitnesses_by_species_by_generation.append(fitnesses_by_species)
-
-    return fitnesses_by_species_by_generation
+from typing import List
 
 
 def is_species_stagnant(fitnesses_by_species_by_generation: List[dict], species_id: int, stagnation_limit: float,
