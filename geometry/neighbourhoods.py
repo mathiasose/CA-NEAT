@@ -53,21 +53,3 @@ MOORE = tuple(
     for x in range(-1, 2)
     if chebyshev_distance((x, y), (0, 0)) <= 1
 )
-
-# backwards compatability
-COLUMN_MAJOR_VON_NEUMANN = tuple(
-    (x, y)
-    for x in range(-1, 2)
-    for y in range(-1, 2)
-    if manhattan_distance((x, y), (0, 0)) <= 1
-)
-COLUMN_MAJOR_EXTENDED_VON_NEUMANN = tuple(
-    (x, y)
-    for x in range(-2, 3)
-    for y in range(-2, 3)
-    if manhattan_distance((x, y), (0, 0)) <= 2
-)
-
-if __name__ == '__main__':
-    print(VON_NEUMANN)
-    print(COLUMN_MAJOR_VON_NEUMANN)
