@@ -1,8 +1,8 @@
 import math
+import random
 from typing import Iterator, List, Tuple
 from uuid import uuid4
 
-import random
 from neat.genome import Genome
 from neat.species import Species
 
@@ -24,7 +24,7 @@ def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
         elif neat_config.initial_connection == 'fully_connected':
             g.connect_full()
         elif neat_config.initial_connection == 'partial':
-            if isinstance(neat_config.connection_fraction, callable):
+            if callable(neat_config.connection_fraction):
                 fraction = neat_config.connection_fraction()
             else:
                 fraction = neat_config.connection_fraction

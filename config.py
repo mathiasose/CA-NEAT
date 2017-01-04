@@ -1,3 +1,5 @@
+import random
+
 from neat.config import Config
 
 
@@ -9,6 +11,8 @@ class CPPNNEATConfig(Config):
     initial_hidden_nodes = 0
     stagnation_median_threshold = True
     stop_when_optimal_found = True
+    initial_connection = 'partial'
+    connection_fraction = lambda *args: 0.5 * (1 + random.random())
 
     def __init__(self, **kwargs):
         from neat import activation_functions
