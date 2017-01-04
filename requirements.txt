@@ -1,4 +1,4 @@
-SQLAlchemy==1.0.114
+SQLAlchemy==1.1.4
 celery==4.0.2
 dill==0.2.5
 neat-python==0.8
