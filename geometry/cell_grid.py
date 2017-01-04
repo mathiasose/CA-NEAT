@@ -205,6 +205,38 @@ class FiniteCellGrid1D(CellGrid1D):
         return new
 
 
+class ToroidalCellGrid1D(FiniteCellGrid1D):
+    def __init__(self, cell_states, x_range, values=None, neighbourhood=None):
+        x0, x1 = x_range
+
+        assert x0 == 0
+
+        super().__init__(
+            cell_states=cell_states,
+            x_range=x_range,
+            values=values,
+            neighbourhood=neighbourhood
+        )
+
+    def is_coord_within_bounds(self, coord):
+        x, = coord
+        l, r = self.x_range
+
+        return l <= x < r
+
+    def get_absolute_coord(self, coord):
+        x, = coord
+        l, r = self.x_range
+
+        return (x % r,)
+
+    def set(self, coord, value):
+        super().set(self.get_absolute_coord(coord), value)
+
+    def get(self, coord, default=None):
+        return super().get(self.get_absolute_coord(coord), default=default)
+
+
 class FiniteCellGrid2D(CellGrid2D):
     def __init__(self, cell_states, x_range, y_range, values=None, neighbourhood=None):
         self.x_range = x_range

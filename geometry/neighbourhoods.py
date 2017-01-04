@@ -32,6 +32,7 @@ def radius_2d(neighbourhood):
 
 
 LCR = ((-1,), (0,), (1,))
+LLLCRRR = ((-3,), (-2,), (-1,), (0,), (1,), (2,), (3,))
 
 VON_NEUMANN = tuple(
     (x, y)
