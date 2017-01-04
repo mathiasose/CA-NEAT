@@ -1,13 +1,14 @@
 from operator import attrgetter
 from random import choice, random, sample
 from statistics import mean, stdev
+from typing import Iterator, List, T
 
 
 class TooFewIndividuals(Exception):
     pass
 
 
-def roulette(population, scaling_func, **kwargs):
+def roulette(population: List[T], scaling_func, **kwargs) -> Iterator[T]:
     """
     generates pairs with the roulette method.
     requires a scaling_func to scale the "slices"
@@ -60,14 +61,14 @@ def roulette(population, scaling_func, **kwargs):
         yield (individuals_by_id.get(a), individuals_by_id.get(b))
 
 
-def fitness_proportionate(population, **kwargs):
+def fitness_proportionate(population: List[T], **kwargs) -> Iterator[T]:
     total_fitness = sum(x.fitness for x in population)
     scaling_func = lambda fitness: fitness / total_fitness
 
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def sigma_scaled(population, **kwargs):
+def sigma_scaled(population: List[T], **kwargs) -> Iterator[T]:
     try:
         assert len(population) > 1
     except AssertionError:
@@ -85,7 +86,7 @@ def sigma_scaled(population, **kwargs):
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def ranked(population, **kwargs):
+def ranked(population: List[T], **kwargs) -> Iterator[T]:
     min_f = min(population, key=attrgetter('fitness'))
     max_f = max(population, key=attrgetter('fitness'))
     sorted_population = sorted(population, key=attrgetter('fitness'), reverse=True)
@@ -94,7 +95,7 @@ def ranked(population, **kwargs):
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def tournament(population, group_size, epsilon, **kwargs):
+def tournament(population: List[T], group_size: int, epsilon: float, **kwargs) -> Iterator[T]:
     def get_one(group):
         r = random()
 
@@ -109,7 +110,7 @@ def tournament(population, group_size, epsilon, **kwargs):
         raise TooFewIndividuals
 
     while True:
-        pool = list(population)
+        pool = list(population)  # make a shallow copy
 
         group_a = sample(pool, group_size)
         a = get_one(group_a)
@@ -121,7 +122,12 @@ def tournament(population, group_size, epsilon, **kwargs):
         yield (a, b)
 
 
-def random_choice(population, **kwargs):
+def random_choice(population: List[T], **kwargs) -> Iterator[T]:
+    try:
+        assert len(population) > 0
+    except AssertionError:
+        raise TooFewIndividuals
+
     while True:
         a = choice(population)
         b = choice(population)
