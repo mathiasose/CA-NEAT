@@ -1,5 +1,5 @@
 from dill import dill
-from kombu.serialization import pickle_protocol, pickle_loads, registry
+from kombu.serialization import pickle_loads, pickle_protocol, registry
 from kombu.utils.encoding import str_to_bytes
 
 
@@ -21,12 +21,14 @@ def register_dill():
 
 register_dill()
 
-CELERY_TASK_SERIALIZER = 'dill'
-CELERY_ACCEPT_CONTENT = ['dill']
+task_serializer = 'dill'
+event_serializer = 'dill'
+result_serializer = 'dill'
+accept_content = ['dill']
 
-CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
-CELERY_RESULT_PERSISTENT = False
+result_backend = 'db+sqlite:///results.sqlite'
+result_persistent = False
 
-# CELERY_ALWAYS_EAGER = True
+# task_always_eager = True
 
-# BROKER_URL = 'sqla+sqlite:///celerydb.sqlite'
+# broker_url = 'sqla+sqlite:///celerydb.sqlite'
