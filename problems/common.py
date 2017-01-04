@@ -2,7 +2,7 @@ from config import CAConfig
 
 
 def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
-    from ca.iterate import n_iterations
+    from ca.iterate import iterate_ca_n_times_or_until_cycle_found
     from patterns.replicate_pattern import find_pattern_partial_matches
     from geometry.cell_grid import CellGrid2D
     from statistics import mean
@@ -38,7 +38,7 @@ def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
 
         yield initial_grid
 
-        for grid in n_iterations(initial_grid, transition_f, iterations):
+        for grid in iterate_ca_n_times_or_until_cycle_found(initial_grid, transition_f, iterations):
             yield grid
 
     grid_iterations = ca_develop(phenotype)
@@ -73,7 +73,7 @@ def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
 
 
 def morphogenesis_fitness_f(phenotype, ca_config: CAConfig) -> float:
-    from ca.iterate import n_iterations
+    from ca.iterate import iterate_ca_n_times_or_until_cycle_found
     from patterns.replicate_pattern import count_correct_cells
     from geometry.cell_grid import ToroidalCellGrid2D
     from utils import create_state_normalization_rules
@@ -115,7 +115,7 @@ def morphogenesis_fitness_f(phenotype, ca_config: CAConfig) -> float:
 
         yield initial_grid
 
-        for grid in n_iterations(initial_grid, transition_f, iterations):
+        for grid in iterate_ca_n_times_or_until_cycle_found(initial_grid, transition_f, iterations):
             yield grid
 
     grid_iterations = ca_develop(phenotype)

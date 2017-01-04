@@ -13,7 +13,7 @@ from operator import itemgetter
 
 from tabulate import tabulate
 
-from ca.iterate import n_iterations
+from ca.iterate import iterate_ca_n_times_or_until_cycle_found
 from database import Individual, get_db
 from geometry.cell_grid import ToroidalCellGrid2D
 from utils import PROJECT_ROOT, create_state_normalization_rules

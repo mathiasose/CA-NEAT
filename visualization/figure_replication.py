@@ -10,7 +10,7 @@ from matplotlib.ticker import MultipleLocator
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 from operator import itemgetter
 
-from ca.iterate import n_iterations
+from ca.iterate import iterate_ca_n_times_or_until_cycle_found
 from database import Individual, get_db
 from geometry.cell_grid import ToroidalCellGrid2D, get_all_rotations_and_flips, get_rotational_hash, CellGrid2D
 from patterns.replicate_pattern import find_pattern_partial_matches
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
             yield initial_grid
 
-            for grid in n_iterations(initial_grid, transition_f, iterations):
+            for grid in iterate_ca_n_times_or_until_cycle_found(initial_grid, transition_f, iterations):
 
                 partial_matches = list(find_pattern_partial_matches(grid, pattern))
 

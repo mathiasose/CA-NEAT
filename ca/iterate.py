@@ -1,12 +1,9 @@
-from typing import Iterator, List
+from typing import Iterator
 
-from neat.nn import FeedForwardNetwork
-
-from config import CAConfig
 from geometry.cell_grid import CellGrid
 
 
-def iterate_ca(grid: CellGrid, transition_f) -> CellGrid:
+def iterate_ca_once(grid: CellGrid, transition_f) -> CellGrid:
     new = grid.empty_copy()
 
     for coord in grid.iterate_coords():
@@ -16,20 +13,24 @@ def iterate_ca(grid: CellGrid, transition_f) -> CellGrid:
     return new
 
 
-def n_iterations(initial_grid: CellGrid, transition_f, n: int, cycle_check=True) -> Iterator[CellGrid]:
+def iterate_ca_n_times(initial_grid: CellGrid, transition_f, n: int) -> Iterator[CellGrid]:
     grid = initial_grid
 
-    if cycle_check:
-        seen = {initial_grid}
-
     for _ in range(n):
-        new = iterate_ca(grid, transition_f=transition_f)
+        new = iterate_ca_once(grid, transition_f=transition_f)
+        yield new
+        grid = new
 
-        if cycle_check and new in seen:
-            # found a cycle, yield one more and stop
-            yield new
+
+def iterate_ca_n_times_or_until_cycle_found(initial_grid: CellGrid, transition_f, n: int) -> Iterator[CellGrid]:
+    seen = {initial_grid}
+
+    for new in iterate_ca_n_times(initial_grid, transition_f, n):
+        yield new
+
+        if new in seen:
+            # When a cycle is found, the function will terminate, but not before yielding the state that was repeated.
+            # The function that is calling this function can enumerate and compare the outputs to determine cycle length.
             return
         else:
-            yield new
             seen.add(new)
-            grid = new
