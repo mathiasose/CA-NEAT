@@ -1,15 +1,19 @@
 import os
 from datetime import datetime
 from statistics import mode
+from typing import Sequence, Tuple
+
+from neat.nn import FeedForwardNetwork
 
 from config import CAConfig, CPPNNEATConfig
 from ga.selection import sigma_scaled
+from geometry.cell_grid import CELL_STATE_T
 from geometry.neighbourhoods import LLLCRRR
 from patterns.patterns import ALPHABET_2
 from run_experiment import initialize_scenario
 
 
-def create_binary_pattern(alphabet):
+def create_binary_pattern(alphabet: Tuple[CELL_STATE_T, CELL_STATE_T]) -> Sequence[CELL_STATE_T]:
     from random import choice, shuffle
 
     a, b = alphabet
@@ -27,29 +31,30 @@ def create_binary_pattern(alphabet):
     return values
 
 
-def invert_pattern(pattern):
+def invert_pattern(pattern: Sequence[CELL_STATE_T]) -> Sequence[CELL_STATE_T]:
     a, b = ALPHABET_2
 
     return list(map(lambda value: (a if value == b else b), pattern))
 
 
-def fitness_f(phenotype, ca_config: CAConfig) -> float:
+def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
     from ca.iterate import iterate_ca_n_times_or_until_cycle_found
     from utils import create_state_normalization_rules
     from operator import itemgetter
     from neat.nn import FeedForwardNetwork
-    from typing import Tuple, T
+    from typing import Iterator
     from statistics import mean
     from geometry.cell_grid import ToroidalCellGrid1D
     from math import exp
+    from geometry.cell_grid import CELL_STATE_T
 
     alphabet = ca_config.alphabet
 
     iterations = ca_config.iterations
     state_normalization_rules = create_state_normalization_rules(states=alphabet)
 
-    def ca_develop(grid, network: FeedForwardNetwork):
-        def transition_f(inputs_discrete_values: Tuple[T]) -> T:
+    def ca_develop(grid, network: FeedForwardNetwork) -> Iterator[ToroidalCellGrid1D]:
+        def transition_f(inputs_discrete_values: Sequence[CELL_STATE_T]) -> CELL_STATE_T:
             if all((x == grid.dead_cell) for x in inputs_discrete_values):
                 return grid.dead_cell
 

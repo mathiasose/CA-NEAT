@@ -1,8 +1,10 @@
+from typing import Sequence
+
 from geometry.cell_grid import CellGrid2D
 from utils import is_even
 
 
-def evaluate(grid: CellGrid2D, grid_r: int, grid_cell=1, checker_colors=('0', '1')):
+def evaluate(grid: CellGrid2D, grid_r: int, grid_cell: int = 1, checker_colors: Sequence[str] = ('0', '1')) -> float:
     correct_count = 0
     for y in range(-grid_r, grid_r):
         for x in range(-grid_r, grid_r):

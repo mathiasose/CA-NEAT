@@ -1,4 +1,8 @@
-from typing import T, Tuple
+from typing import Tuple
+
+from geometry.cell_grid import CELL_STATE_T
+
+PATTERN_T = Tuple[Tuple[CELL_STATE_T, ...], ...]
 
 QUIESCENT = ' '
 ALPHABET_2 = (QUIESCENT, '■',)
@@ -77,19 +81,16 @@ NORWEGIAN = (
 )
 
 
-def pad_pattern(pattern: Tuple[Tuple[T]], dead_cell: T, n=1) -> Tuple[Tuple[T]]:
+def pad_pattern(pattern: PATTERN_T, dead_cell: CELL_STATE_T, n: int = 1) -> PATTERN_T:
     pattern_w = len(pattern[0])
 
     new_w = pattern_w + 2 * n
 
-    d = dead_cell
-    padded_pattern = [(d,) * new_w] * n
-    for row in pattern:
-        padded_pattern.append((d,) * n + row + (d,) * n)
+    padded_pattern = [(dead_cell,) * new_w] * n
+    padded_pattern.extend((dead_cell,) * n + row + (dead_cell,) * n for row in pattern)
+    padded_pattern.extend([(dead_cell,) * new_w] * n)
 
-    padded_pattern += [(d,) * new_w] * n
-
-    return tuple(padded_pattern)
+    return tuple(tuple(row) for row in padded_pattern)
 
 
 if __name__ == '__main__':

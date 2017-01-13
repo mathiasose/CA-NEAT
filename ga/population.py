@@ -1,6 +1,7 @@
 import math
 import random
-from typing import Iterator, List, Tuple
+from typing import (Callable, Dict, Iterable, Iterator, List, Optional,
+                    Sequence, Tuple)
 from uuid import uuid4
 
 from neat.genome import Genome
@@ -34,8 +35,9 @@ def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
         yield g
 
 
-def speciate(genotypes: List[Genome], compatibility_threshold: float, existing_species=None) -> List[Species]:
-    species = []
+def speciate(genotypes: Sequence[Genome], compatibility_threshold: float,
+             existing_species: Optional[List[Species]] = None) -> List[Species]:
+    species = []  # type: List[Species]
     if isinstance(existing_species, list):
         species += existing_species
 
@@ -66,8 +68,8 @@ def speciate(genotypes: List[Genome], compatibility_threshold: float, existing_s
     return species
 
 
-def sort_into_species(genotypes: List[Genome]) -> List[Species]:
-    species = {}
+def sort_into_species(genotypes: Sequence[Genome]) -> Iterable[Species]:
+    species = {}  # type: Dict[int, Species]
     for gt in genotypes:
         species_id = gt.species_id
 
@@ -81,7 +83,8 @@ def sort_into_species(genotypes: List[Genome]) -> List[Species]:
     return species.values()
 
 
-def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair_selection_f, elitism=0, **kwargs) \
+def neat_reproduction(species: Sequence[Species], pop_size: int, survival_threshold: float,
+                      pair_selection_f: Callable[[Sequence[Genome]], Genome], elitism: int = 0, **kwargs) \
         -> Tuple[List[Species], List[Genome]]:
     species_fitness = []
     avg_adjusted_fitness = 0.0
@@ -100,7 +103,7 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair
     # Compute the number of new individuals to create for the new generation.
     spawn_amounts = []
     for s, sfitness in species_fitness:
-        spawn = len(s.members)
+        spawn = float(len(s.members))
         if sfitness > avg_adjusted_fitness:
             spawn *= 1.1
         else:
@@ -111,7 +114,7 @@ def neat_reproduction(species: List[Species], pop_size, survival_threshold, pair
     norm = pop_size / total_spawn
     spawn_amounts = [int(round(n * norm)) for n in spawn_amounts]
 
-    new_population = []
+    new_population = []  # type: List[Genome]
     new_species = []
     for spawn, (s, sfitness) in zip(spawn_amounts, species_fitness):
         if spawn <= 0:

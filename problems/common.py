@@ -1,7 +1,9 @@
+from neat.nn import FeedForwardNetwork
+
 from config import CAConfig
 
 
-def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
+def replication_fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
     from ca.iterate import iterate_ca_n_times_or_until_cycle_found
     from patterns.replicate_pattern import find_pattern_partial_matches
     from geometry.cell_grid import CellGrid2D
@@ -9,7 +11,8 @@ def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
     from utils import create_state_normalization_rules
     from operator import itemgetter
     from neat.nn import FeedForwardNetwork
-    from typing import Tuple, T
+    from typing import Sequence, Iterator
+    from geometry.cell_grid import CELL_STATE_T
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
@@ -25,8 +28,8 @@ def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
 
     initial_grid.add_pattern_at_coord(pattern, (0, 0))
 
-    def ca_develop(network: FeedForwardNetwork):
-        def transition_f(inputs_discrete_values: Tuple[T]) -> T:
+    def ca_develop(network: FeedForwardNetwork) -> Iterator[CellGrid2D]:
+        def transition_f(inputs_discrete_values: Sequence[CELL_STATE_T]) -> CELL_STATE_T:
             if all((x == initial_grid.dead_cell) for x in inputs_discrete_values):
                 return initial_grid.dead_cell
 
@@ -72,15 +75,16 @@ def replication_fitness_f(phenotype, ca_config: CAConfig) -> float:
     return best
 
 
-def morphogenesis_fitness_f(phenotype, ca_config: CAConfig) -> float:
+def morphogenesis_fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
     from ca.iterate import iterate_ca_n_times_or_until_cycle_found
     from patterns.replicate_pattern import count_correct_cells
     from geometry.cell_grid import ToroidalCellGrid2D
     from utils import create_state_normalization_rules
     from operator import itemgetter
     from neat.nn import FeedForwardNetwork
-    from typing import Tuple, T
     from math import exp
+    from typing import Sequence, Iterator
+    from geometry.cell_grid import CELL_STATE_T
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
@@ -102,8 +106,8 @@ def morphogenesis_fitness_f(phenotype, ca_config: CAConfig) -> float:
 
     initial_grid.add_pattern_at_coord(seed, (0, 0))
 
-    def ca_develop(network: FeedForwardNetwork):
-        def transition_f(inputs_discrete_values: Tuple[T]) -> T:
+    def ca_develop(network: FeedForwardNetwork) -> Iterator[ToroidalCellGrid2D]:
+        def transition_f(inputs_discrete_values: Sequence[CELL_STATE_T]) -> CELL_STATE_T:
             if all((x == initial_grid.dead_cell) for x in inputs_discrete_values):
                 return initial_grid.dead_cell
 

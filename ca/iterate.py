@@ -1,9 +1,11 @@
-from typing import Iterator
+from typing import Callable, Iterator, Sequence
 
-from geometry.cell_grid import CellGrid
+from geometry.cell_grid import CELL_STATE_T, CellGrid
+
+TRANSITION_F_T = Callable[[Sequence[CELL_STATE_T]], CELL_STATE_T]
 
 
-def iterate_ca_once(grid: CellGrid, transition_f) -> CellGrid:
+def iterate_ca_once(grid: CellGrid, transition_f: TRANSITION_F_T) -> CellGrid:
     new = grid.empty_copy()
 
     for coord in grid.iterate_coords():
@@ -13,7 +15,7 @@ def iterate_ca_once(grid: CellGrid, transition_f) -> CellGrid:
     return new
 
 
-def iterate_ca_n_times(initial_grid: CellGrid, transition_f, n: int) -> Iterator[CellGrid]:
+def iterate_ca_n_times(initial_grid: CellGrid, transition_f: TRANSITION_F_T, n: int) -> Iterator[CellGrid]:
     grid = initial_grid
 
     for _ in range(n):
@@ -22,7 +24,8 @@ def iterate_ca_n_times(initial_grid: CellGrid, transition_f, n: int) -> Iterator
         grid = new
 
 
-def iterate_ca_n_times_or_until_cycle_found(initial_grid: CellGrid, transition_f, n: int) -> Iterator[CellGrid]:
+def iterate_ca_n_times_or_until_cycle_found(initial_grid: CellGrid, transition_f: TRANSITION_F_T, n: int) \
+        -> Iterator[CellGrid]:
     seen = {initial_grid}
 
     for new in iterate_ca_n_times(initial_grid, transition_f, n):

@@ -1,9 +1,11 @@
 from statistics import mean
-from typing import List
+from typing import Callable, Dict, List, Sequence
+
+from neat.species import Species
 
 
-def is_species_stagnant(fitnesses_by_species_by_generation: List[dict], species_id: int, stagnation_limit: float,
-                        f=mean):
+def is_species_stagnant(fitnesses_by_species_by_generation: List[Dict[int, Species]], species_id: int,
+                        stagnation_limit: float, f: Callable[[Sequence[Species]], float] = mean) -> bool:
     """
     Traverse data structure from newest to latest generation to see if the total fitness for the given species
     is stagnant (or going down)

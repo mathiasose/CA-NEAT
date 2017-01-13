@@ -18,7 +18,7 @@ class Scenario(Base):
     population_size = Column(Integer)
 
     def __repr__(self):
-        return f'Scenario {self.id}'
+        return 'Scenario {}'.format(self.id)
 
 
 class Individual(Base):
@@ -32,10 +32,12 @@ class Individual(Base):
     timestamp = Column(DateTime, index=True)
 
     def __repr__(self):
-        return f'Scenario {self.scenario_id}, ' \
-               f'generation {self.generation}, ' \
-               f'individual {self.individual_number}, ' \
-               f'fitness {self.fitness}'
+        return 'Scenario {}, generation {}, individual {}, fitness {}'.format(
+            self.scenario_id,
+            self.generation,
+            self.individual_number,
+            self.fitness
+        )
 
 
 class Db:

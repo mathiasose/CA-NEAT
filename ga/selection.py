@@ -1,14 +1,16 @@
 from operator import attrgetter
 from random import choice, random, sample
 from statistics import mean, stdev
-from typing import Iterator, List, T
+from typing import Callable, Iterator, List, Sequence, TypeVar
+
+from neat.genome import Genome
 
 
 class TooFewIndividuals(Exception):
     pass
 
 
-def roulette(population: List[T], scaling_func, **kwargs) -> Iterator[T]:
+def roulette(population: List[Genome], scaling_func: Callable[[float], float], **kwargs) -> Iterator[Genome]:
     """
     generates pairs with the roulette method.
     requires a scaling_func to scale the "slices"
@@ -19,7 +21,7 @@ def roulette(population: List[T], scaling_func, **kwargs) -> Iterator[T]:
     except AssertionError:
         raise TooFewIndividuals
 
-    def generate_roulette():
+    def generate_roulette() -> Callable[[], Genome]:
         """
         returns a function that when called will select an indidividual from the population
         based on the normalized fitness value as decided by fitness_func
@@ -39,7 +41,7 @@ def roulette(population: List[T], scaling_func, **kwargs) -> Iterator[T]:
 
         sorted_by_lower_bound = sorted(roulette.keys(), key=lambda x: x[0])
 
-        def get_one():
+        def get_one() -> Genome:
             r = random()
 
             for (lo, hi) in sorted_by_lower_bound:
@@ -61,14 +63,14 @@ def roulette(population: List[T], scaling_func, **kwargs) -> Iterator[T]:
         yield (individuals_by_id.get(a), individuals_by_id.get(b))
 
 
-def fitness_proportionate(population: List[T], **kwargs) -> Iterator[T]:
+def fitness_proportionate(population: List[Genome], **kwargs) -> Iterator[Genome]:
     total_fitness = sum(x.fitness for x in population)
     scaling_func = lambda fitness: fitness / total_fitness
 
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def sigma_scaled(population: List[T], **kwargs) -> Iterator[T]:
+def sigma_scaled(population: List[Genome], **kwargs) -> Iterator[Genome]:
     try:
         assert len(population) > 1
     except AssertionError:
@@ -86,7 +88,7 @@ def sigma_scaled(population: List[T], **kwargs) -> Iterator[T]:
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def ranked(population: List[T], **kwargs) -> Iterator[T]:
+def ranked(population: List[Genome], **kwargs) -> Iterator[Genome]:
     min_f = min(population, key=attrgetter('fitness'))
     max_f = max(population, key=attrgetter('fitness'))
     sorted_population = sorted(population, key=attrgetter('fitness'), reverse=True)
@@ -95,8 +97,8 @@ def ranked(population: List[T], **kwargs) -> Iterator[T]:
     return roulette(population=population, scaling_func=scaling_func, **kwargs)
 
 
-def tournament(population: List[T], group_size: int, epsilon: float, **kwargs) -> Iterator[T]:
-    def get_one(group):
+def tournament(population: List[Genome], group_size: int, epsilon: float, **kwargs) -> Iterator[Genome]:
+    def get_one(group: Sequence[Genome]) -> Genome:
         r = random()
 
         if r < epsilon:
@@ -122,7 +124,7 @@ def tournament(population: List[T], group_size: int, epsilon: float, **kwargs) -
         yield (a, b)
 
 
-def random_choice(population: List[T], **kwargs) -> Iterator[T]:
+def random_choice(population: List[Genome], **kwargs) -> Iterator[Genome]:
     try:
         assert len(population) > 0
     except AssertionError:

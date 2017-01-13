@@ -1,4 +1,5 @@
 import random
+from typing import Any, Dict
 
 from neat.config import Config
 
@@ -35,4 +36,4 @@ class CAConfig:
     iterations = None
     r = None
     initial = None
-    etc = {}
+    etc = {}  # type: Dict[str, Any]

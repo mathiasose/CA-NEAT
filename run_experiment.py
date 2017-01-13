@@ -1,10 +1,10 @@
 import logging
 from collections import defaultdict
-from typing import List
+from typing import Callable, Dict, Iterator, List
 
 from celery.app import shared_task
 from neat.genome import Genome
-from neat.nn import create_feed_forward_phenotype
+from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 from neat.population import CompleteExtinctionException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.sql.functions import now
@@ -16,14 +16,18 @@ from ga.population import (create_initial_population, neat_reproduction,
 from ga.stagnation import is_species_stagnant
 from report import send_message_via_pushbullet
 
+FITNESS_F_T = Callable[[FeedForwardNetwork, CAConfig], float]
+
+PAIR_SELECTION_F_T = Callable[[List[Genome]], Iterator[Genome]]
+
 AUTO_RETRY = {
     'autoretry_for': (OperationalError,),
     'retry_kwargs': {'countdown': 5},
 }
 
 
-def initialize_scenario(db_path: str, description: str, fitness_f, pair_selection_f,
-                        neat_config: CPPNNEATConfig, ca_config: CAConfig):
+def initialize_scenario(db_path: str, description: str, fitness_f: FITNESS_F_T, pair_selection_f: PAIR_SELECTION_F_T,
+                        neat_config: CPPNNEATConfig, ca_config: CAConfig) -> Scenario:
     print(db_path)
 
     db = get_db(db_path)
@@ -55,7 +59,8 @@ def initialize_scenario(db_path: str, description: str, fitness_f, pair_selectio
 
 
 def initialize_generation(db_path: str, scenario_id: int, generation: int, genotypes: List[Genome],
-                          pair_selection_f, fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
+                          pair_selection_f: PAIR_SELECTION_F_T, fitness_f: FITNESS_F_T, neat_config: CPPNNEATConfig,
+                          ca_config: CAConfig) -> None:
     from celery import group, chord
 
     grouped_tasks = group(handle_individual.s(
@@ -77,8 +82,8 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
 
 
 @shared_task(name='finalize_generation', bind=True, **AUTO_RETRY)
-def finalize_generation(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f, pair_selection_f,
-                        neat_config: CPPNNEATConfig, ca_config: CAConfig):
+def finalize_generation(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
+                        pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
     db = get_db(db_path)
     session = db.Session()
     session.bulk_save_objects(results)
@@ -94,7 +99,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         msg = 'Scenario {} finished after {} generations'.format(scenario_id, next_gen)
         send_message_via_pushbullet.delay(title=db_path, body=msg)
         logging.info(msg)
-        return
+        return msg
 
     species = sort_into_species([individual.genotype for individual in population])
 
@@ -107,7 +112,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         fitnesses_by_species_by_generation = []
         for n in range(*generation_range):
             generation = db.get_generation(scenario_id=scenario_id, generation=n, session=session)
-            fitnesses_by_species = defaultdict(list)
+            fitnesses_by_species = defaultdict(list)  # type: Dict[int, List[float]]
 
             for individual in generation:
                 fitnesses_by_species[individual.genotype.species_id].append(individual.fitness)
@@ -157,15 +162,20 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         ca_config=ca_config,
     )
 
-    return f'{scenario}, generation {generation_n}, {len(nex_gen_genotypes)} individuals, {len(alive_species)} species'
+    return '{scenario}, generation {generation_n}, {n_individuals} individuals, {n_species} species'.format(
+        scenario=scenario,
+        generation_n=generation_n,
+        n_individuals=len(nex_gen_genotypes),
+        n_species=len(alive_species),
+    )
 
 
 @shared_task(name='handle_individual', **AUTO_RETRY)
 def handle_individual(db_path: str, scenario_id: int, generation: int, individual_number: int, genotype: Genome,
-                      fitness_f, neat_config: CPPNNEATConfig, ca_config: CAConfig):
+                      fitness_f: FITNESS_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> Individual:
     phenotype = create_feed_forward_phenotype(genotype)
     try:
-        fitness = fitness_f(phenotype=phenotype, ca_config=ca_config)
+        fitness = fitness_f(phenotype, ca_config)
 
         assert 0.0 <= fitness <= 1.0
     except OverflowError:

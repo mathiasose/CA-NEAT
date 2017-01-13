@@ -1,59 +1,70 @@
 from collections import defaultdict
 from operator import itemgetter
+from typing import Callable, Dict, Iterator, Optional, Sequence, Tuple, Union
 
 from numpy.lib.twodim_base import fliplr, flipud, rot90
 
-from geometry.neighbourhoods import LCR, VON_NEUMANN, radius_1d, radius_2d
+from geometry.neighbourhoods import (COORD_1D_T, COORD_2D_T, COORD_T, LCR,
+                                     VON_NEUMANN, radius_1d, radius_2d)
 from utils import tuple_add
+
+CELL_STATE_T = Union[str, int]
 
 
 class CellGrid(defaultdict):
-    dimensionality = None
-    neighbourhood = None
-    origin = None
+    dimensionality = None  # type: int
+    neighbourhood = None  # type: Sequence[int]
+    origin = None  # type: COORD_T
 
-    def __init__(self, cell_states, values=None, neighbourhood=None):
-        self.cell_states = cell_states
-        self.dead_cell = cell_states[0]
+    def __init__(self, cell_states: Sequence[CELL_STATE_T], values: Optional[Dict[COORD_T, CELL_STATE_T]] = None,
+                 neighbourhood: Optional[Sequence[int]] = None) -> None:
+        self.cell_states = cell_states  # type: Sequence[CELL_STATE_T]
+        self.dead_cell = cell_states[0]  # type: CELL_STATE_T
         super().__init__()
 
         if values:
-            assert isinstance(values, dict)
-
             for key, value in values.items():
                 self.set(key, value)
 
         if neighbourhood:
             self.neighbourhood = neighbourhood
 
-    def get(self, coord, default=None):
+    def get(self, coord: COORD_T, default: Optional[CELL_STATE_T] = None) -> CELL_STATE_T:
         assert len(coord) == self.dimensionality
 
-        return super().get(coord, default or self.dead_cell)
+        if default is None:
+            default = self.dead_cell
 
-    def set(self, coord, value):
+        return super().get(coord, default)
+
+    def set(self, coord: COORD_T, value: CELL_STATE_T) -> None:
         assert len(coord) == self.dimensionality
         assert value in self.cell_states
 
-        if coord != self.origin and value == self.dead_cell:
+        if (coord != self.origin) and (value == self.dead_cell):
             if coord in self.keys():
                 super().__delitem__(coord)
             return
 
         super().__setitem__(coord, value)
 
-    def get_neighbourhood_values(self, coord):
-        return tuple(self.get(tuple_add(coord, direction)) for direction in self.neighbourhood)
+    def get_neighbourhood_values(self, coord: COORD_T) -> Sequence[CELL_STATE_T]:
+        return tuple(
+            self.get(tuple_add(coord, direction)) for direction in self.neighbourhood
+        )
 
     def empty_copy(self):
         new = self.__class__(cell_states=self.cell_states)
         new.neighbourhood = self.neighbourhood
         return new
 
-    def iterate_coords(self):
+    def iterate_coords(self) -> Iterator[COORD_T]:
         raise NotImplementedError
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        if self.__class__ != other.__class__:
+            return False
+
         if len(self) != len(other):
             return False
 
@@ -63,57 +74,56 @@ class CellGrid(defaultdict):
 
         return True
 
-    def get_extreme_coords(self, pad=0):
+    def get_extreme_coords(self, pad: int = 0) -> Sequence[COORD_T]:
         raise NotImplementedError
 
-    def get_live_cells(self):
+    def get_live_cells(self) -> Iterator[Tuple[COORD_T, CELL_STATE_T]]:
         return ((coord, cell) for (coord, cell) in self.items() if cell != self.dead_cell)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple(self.get_live_cells()))
 
 
 class CellGrid1D(CellGrid):
     dimensionality = 1
     neighbourhood = LCR
-    origin = (0,)
+    origin = (0,)  # type: COORD_1D_T
 
-    def get_extreme_coords(self, pad=0):
+    def get_extreme_coords(self, pad: int = 0) -> Tuple[COORD_1D_T, COORD_1D_T]:
         x_min = min(self.keys())[0] - pad
         x_max = max(self.keys())[0] + pad
 
         return (x_min,), (x_max,)
 
     @property
-    def area(self):
+    def area(self) -> int:
         (x_min,), (x_max,) = self.get_extreme_coords()
 
         return max(abs(x_max - x_min), 1)
 
-    def iterate_coords(self):
+    def iterate_coords(self) -> Iterator[COORD_1D_T]:
         (x_min,), (x_max,) = self.get_extreme_coords(pad=radius_1d(self.neighbourhood))
 
         for x in range(x_min, x_max):
             yield (x,)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ''.join(
-            '{}'.format(self.get(coord))
-            for coord in self.iterate_coords()
+            '{}'.format(self.get(coord)) for coord in self.iterate_coords()
         )
 
-    def get_range(self, x_range):
+    def get_range(self, x_range: Tuple[int, int]) -> Iterator[CELL_STATE_T]:
         l, r = x_range
 
-        return tuple(self.get((x,)) for x in range(l, r))
+        return (self.get((x,)) for x in range(l, r))
 
 
 class CellGrid2D(CellGrid):
     dimensionality = 2
     neighbourhood = VON_NEUMANN
-    origin = (0, 0)
+    origin = (0, 0)  # type: COORD_2D_T
 
-    def get_extreme_coords(self, pad=0):
+    def get_extreme_coords(self, pad=0) -> Tuple[COORD_2D_T, COORD_2D_T]:
         x_min = min(self.keys(), key=itemgetter(0))[0] - pad
         x_max = max(self.keys(), key=itemgetter(0))[0] + pad
         y_min = min(self.keys(), key=itemgetter(1))[1] - pad
@@ -122,19 +132,19 @@ class CellGrid2D(CellGrid):
         return (x_min, y_min), (x_max, y_max)
 
     @property
-    def area(self):
+    def area(self) -> int:
         (x_min, y_min), (x_max, y_max) = self.get_extreme_coords()
 
         return max(abs(x_max - x_min), 1) * max(abs(y_max - y_min), 1)
 
-    def iterate_coords(self):
+    def iterate_coords(self) -> Iterator[COORD_2D_T]:
         (x_min, y_min), (x_max, y_max) = self.get_extreme_coords(pad=radius_2d(self.neighbourhood))
 
         for y in range(y_min, y_max + 1):
             for x in range(x_min, x_max + 1):
                 yield (x, y)
 
-    def __str__(self):
+    def __str__(self) -> str:
         (x_min, y_min), (x_max, y_max) = self.get_extreme_coords()
 
         s = ''
@@ -147,14 +157,27 @@ class CellGrid2D(CellGrid):
 
         return s
 
-    def get_rectangle(self, x_range, y_range, f=None):
+    def get_rectangle(self, x_range: Tuple[int, int], y_range: Tuple[int, int],
+                      f: Optional[Callable[..., CELL_STATE_T]] = None) -> Sequence[Sequence[CELL_STATE_T]]:
         l, r = x_range
         t, b = y_range
 
-        if f:
-            return tuple(tuple(f(self.get((x, y))) for x in range(l, r)) for y in range(t, b))
+        if f is None:
+            return tuple(
+                tuple(
+                    self.get((x, y))
+                    for x in range(l, r)
+                ) for y in range(t, b)
+            )
         else:
-            return tuple(tuple(self.get((x, y)) for x in range(l, r)) for y in range(t, b))
+            return tuple(
+                tuple(
+                    f(
+                        self.get((x, y))
+                    )
+                    for x in range(l, r)
+                ) for y in range(t, b)
+            )
 
     def get_enumerated_rectangle(self, x_range, y_range):
         enumeration = dict((v, k) for k, v in enumerate(self.cell_states))
