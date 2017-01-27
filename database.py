@@ -2,6 +2,7 @@ import dill
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative.api import declarative_base
 from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.sql.functions import now
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import (DateTime, Float, Integer, PickleType,
                                      String)
@@ -29,7 +30,7 @@ class Individual(Base):
     generation = Column(Integer, primary_key=True, index=True)
     genotype = Column(PickleType(pickler=dill))
     fitness = Column(Float, index=True)
-    timestamp = Column(DateTime, index=True)
+    timestamp = Column(DateTime, default=now(), index=True)
 
     def __repr__(self):
         return 'Scenario {}, generation {}, individual {}, fitness {}'.format(

@@ -7,7 +7,6 @@ from neat.genome import Genome
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 from neat.population import CompleteExtinctionException
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.sql.functions import now
 
 from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
@@ -87,6 +86,8 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     db = get_db(db_path)
     session = db.Session()
     session.bulk_save_objects(results)
+    session.commit()
+
     scenario = db.get_scenario(scenario_id, session=session)
     population = db.get_generation(scenario_id, generation_n, session=session)
 
@@ -149,8 +150,6 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         existing_species=next_gen_species
     )
 
-    session.commit()
-
     initialize_generation(
         db_path=db_path,
         scenario_id=scenario_id,
@@ -161,6 +160,8 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         neat_config=neat_config,
         ca_config=ca_config,
     )
+
+    session.close()
 
     return '{scenario}, generation {generation_n}, {n_individuals} individuals, {n_species} species'.format(
         scenario=scenario,
@@ -176,10 +177,10 @@ def handle_individual(db_path: str, scenario_id: int, generation: int, individua
     phenotype = create_feed_forward_phenotype(genotype)
     try:
         fitness = fitness_f(phenotype, ca_config)
-
-        assert 0.0 <= fitness <= 1.0
     except OverflowError:
         fitness = 0.0
+
+    assert 0.0 <= fitness <= 1.0
 
     if hasattr(genotype, 'fitness'):
         genotype.fitness = fitness
@@ -190,7 +191,6 @@ def handle_individual(db_path: str, scenario_id: int, generation: int, individua
         genotype=genotype,
         fitness=fitness,
         generation=generation,
-        timestamp=now()
     )
 
     return individual
