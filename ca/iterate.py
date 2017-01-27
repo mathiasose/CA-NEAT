@@ -3,6 +3,7 @@ from typing import Callable, Iterator, Sequence
 from geometry.cell_grid import CELL_STATE_T, CellGrid
 
 TRANSITION_F_T = Callable[[Sequence[CELL_STATE_T]], CELL_STATE_T]
+ITERATE_F_T = Callable[[CellGrid, TRANSITION_F_T], CellGrid]
 
 
 def iterate_ca_once(grid: CellGrid, transition_f: TRANSITION_F_T) -> CellGrid:
@@ -15,20 +16,21 @@ def iterate_ca_once(grid: CellGrid, transition_f: TRANSITION_F_T) -> CellGrid:
     return new
 
 
-def iterate_ca_n_times(initial_grid: CellGrid, transition_f: TRANSITION_F_T, n: int) -> Iterator[CellGrid]:
+def iterate_ca_n_times(initial_grid: CellGrid, transition_f: TRANSITION_F_T, n: int,
+                       iterate_f: ITERATE_F_T = iterate_ca_once) -> Iterator[CellGrid]:
     grid = initial_grid
 
     for _ in range(n):
-        new = iterate_ca_once(grid, transition_f=transition_f)
+        new = iterate_f(grid, transition_f=transition_f)
         yield new
         grid = new
 
 
-def iterate_ca_n_times_or_until_cycle_found(initial_grid: CellGrid, transition_f: TRANSITION_F_T, n: int) \
-        -> Iterator[CellGrid]:
+def iterate_ca_n_times_or_until_cycle_found(initial_grid: CellGrid, transition_f: TRANSITION_F_T, n: int,
+                                            iterate_f: ITERATE_F_T = iterate_ca_once) -> Iterator[CellGrid]:
     seen = {initial_grid}
 
-    for new in iterate_ca_n_times(initial_grid, transition_f, n):
+    for new in iterate_ca_n_times(initial_grid, transition_f, n, iterate_f):
         yield new
 
         if new in seen:
