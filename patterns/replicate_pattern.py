@@ -2,9 +2,10 @@ from statistics import mean
 from typing import Iterator
 
 from geometry.cell_grid import CellGrid2D, FiniteCellGrid2D
+from patterns.patterns import PATTERN_T
 
 
-def count_pattern(grid: CellGrid2D, pattern) -> int:
+def count_pattern(grid: CellGrid2D, pattern: PATTERN_T) -> int:
     (x_min, y_min), (x_max, y_max) = grid.get_extreme_coords(pad=1)
 
     pattern_h, pattern_w = len(pattern), len(pattern[0])
@@ -33,7 +34,7 @@ def count_correct_cells(test_pattern, target_pattern) -> int:
     return correct_count
 
 
-def find_pattern_partial_matches(grid: CellGrid2D, pattern) -> Iterator[float]:
+def find_pattern_partial_matches(grid: CellGrid2D, pattern: PATTERN_T) -> Iterator[float]:
     (x_min, y_min), (x_max, y_max) = grid.get_extreme_coords(pad=1)
 
     pattern_h, pattern_w = len(pattern), len(pattern[0])
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 
     l = tuple(find_pattern_partial_matches(grid, pattern))
     print(l)
-    l = sorted(l, reverse=True)[:4]
+    l = tuple(sorted(l, reverse=True)[:4])
     print(l)
     print(mean(l))
     print(count_pattern(grid, pattern))
