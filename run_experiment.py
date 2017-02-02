@@ -96,7 +96,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     optimal_solution = population.filter(Individual.fitness >= 1.0)
     optimal_found = (neat_config.stop_when_optimal_found and session.query(optimal_solution.exists()).scalar())
 
-    if (next_gen == scenario.generations) or optimal_found:
+    if (next_gen >= scenario.generations) or optimal_found:
         msg = 'Scenario {} finished after {} generations'.format(scenario_id, next_gen)
         send_message_via_pushbullet.delay(title=db_path, body=msg)
         logging.info(msg)
