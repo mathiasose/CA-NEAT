@@ -1,16 +1,16 @@
 import os
 from operator import itemgetter
-from typing import T, Tuple
+from typing import Iterator, Sequence
 
 import seaborn
-from matplotlib import pyplot as plt
 from matplotlib import animation
-from matplotlib.colors import BoundaryNorm, ListedColormap
+from matplotlib import pyplot as plt
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 
-from ca.iterate import iterate_ca_n_times_or_until_cycle_found
+from ca.iterate import iterate_ca_n_times_or_until_cycle_found, iterate_ca_once_with_coord_inputs
 from database import Individual, get_db
-from geometry.cell_grid import ToroidalCellGrid2D
+from geometry.cell_grid import ToroidalCellGrid2D, CELL_STATE_T
+from geometry.neighbourhoods import radius_2d
 from utils import PROJECT_ROOT, create_state_normalization_rules
 from visualization.colors import colormap, norm
 from visualization.network_fig import draw_net
@@ -20,12 +20,12 @@ INTERVAL = 5
 if __name__ == '__main__':
     seaborn.set(style='white')
 
-    from problems.generate_tricolor import CA_CONFIG
+    from problems.generate_norwegian_flag_with_coord_input import CA_CONFIG
 
-    problem_name, db_file = ('generate_tricolor', '2016-12-04 18:09:12.299816.db')
-    scenario_id = 47
-    generation_n = 301
-    individual_n = 100
+    problem_name, db_file = ('generate_norwegian_flag_with_coord_input', '2017-01-30 09:30:09.020771.db')
+    scenario_id = 19
+    generation_n = 527
+    individual_n = 76
 
     db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
     db = get_db(db_path)
@@ -56,14 +56,19 @@ if __name__ == '__main__':
     initial_grid.add_pattern_at_coord(pattern, (0, 0))
 
     state_normalization_rules = create_state_normalization_rules(states=alphabet)
+    r = radius_2d(neighbourhood)
+    coord_normalization_rules = create_state_normalization_rules(states=range(0 - r, max(pattern_h, pattern_w) + r + 1))
 
 
-    def ca_develop(network: FeedForwardNetwork):
-        def transition_f(inputs_discrete_values: Tuple[T]) -> T:
-            if all((x == initial_grid.dead_cell) for x in inputs_discrete_values):
+    def ca_develop(network: FeedForwardNetwork) -> Iterator[ToroidalCellGrid2D]:
+        def transition_f(inputs_discrete_values: Sequence[CELL_STATE_T]) -> CELL_STATE_T:
+            neighbour_values, xy_values = inputs_discrete_values[:-2], inputs_discrete_values[-2:]
+
+            if all((x == initial_grid.dead_cell) for x in neighbour_values):
                 return initial_grid.dead_cell
 
-            inputs_float_values = tuple(state_normalization_rules[x] for x in inputs_discrete_values)
+            inputs_float_values = tuple(state_normalization_rules[n] for n in neighbour_values) + \
+                                  tuple(coord_normalization_rules[n] for n in xy_values)
 
             outputs = network.serial_activate(inputs_float_values)
 
@@ -71,7 +76,12 @@ if __name__ == '__main__':
 
         yield initial_grid
 
-        for grid in iterate_ca_n_times_or_until_cycle_found(initial_grid, transition_f, iterations):
+        for grid in iterate_ca_n_times_or_until_cycle_found(
+                initial_grid=initial_grid,
+                transition_f=transition_f,
+                n=iterations,
+                iterate_f=iterate_ca_once_with_coord_inputs
+        ):
             yield grid
 
 
@@ -106,14 +116,18 @@ if __name__ == '__main__':
         return (im,)
 
 
-    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(grid_iterations), interval=500, blit=True)
     file_descriptor = '{}_{}'.format(problem_name, db_file.replace('.db', ''))
     output_path = '{}_gen{}_ind{}'.format(file_descriptor, generation_n, individual_n)
 
-    # anim.save(output_path + '.gif', writer='imagemagick', fps=1)
+    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(grid_iterations), interval=500, blit=True)
+    anim.save(output_path + '.gif', writer='imagemagick', fps=1)
     plt.show()
 
-    print(genotype)
-    print(dict((k, v) for k, v in
-               (zip((str(k) for (k, v) in genotype.node_genes.items() if v.type == 'OUTPUT'), CA_CONFIG.alphabet))))
-    draw_net(genotype, filename=output_path, fmt='png', view=True)
+    # print(genotype)
+    y_ = {0: 'N', 1: 'W', 2: 'C', 3: 'E', 4: 'S', 5: 'X', 6: 'Y'}
+    d = dict((k, v) for k, v in
+             (zip((k for (k, v) in genotype.node_genes.items() if v.type == 'OUTPUT'), CA_CONFIG.alphabet)))
+    draw_net(genotype, filename=output_path + '_full', fmt='png', view=True, in_labels=y_, out_labels=d,
+             show_disabled=True, prune_unused=False)
+    draw_net(genotype, filename=output_path + '_pruned', fmt='png', view=True, in_labels=y_, out_labels=d,
+             show_disabled=False, prune_unused=True)
