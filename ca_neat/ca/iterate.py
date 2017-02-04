@@ -10,8 +10,21 @@ def iterate_ca_once(grid: CellGrid, transition_f: TRANSITION_F_T) -> CellGrid:
     new = grid.empty_copy()
 
     for coord in grid.iterate_coords():
+        inputs = grid.get_neighbourhood_values(coord)
+        output = transition_f(inputs)
+        new.set(coord, output)
+
+    return new
+
+
+def iterate_ca_once_with_coord_inputs(grid: CellGrid, transition_f: TRANSITION_F_T) -> CellGrid:
+    new = grid.empty_copy()
+
+    for coord in grid.iterate_coords():
         neighbourhood_values = grid.get_neighbourhood_values(coord)
-        new.set(coord, transition_f(neighbourhood_values))
+        inputs = tuple(neighbourhood_values) + coord
+        output = transition_f(inputs)
+        new.set(coord, output)
 
     return new
 

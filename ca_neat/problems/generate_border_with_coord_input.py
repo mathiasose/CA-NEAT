@@ -91,15 +91,6 @@ def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_c
 
     initial_grid.add_pattern_at_coord(seed, (0, 0))
 
-    def iterate_ca_once(grid: CellGrid, transition_f: TRANSITION_F_T) -> CellGrid:
-        new = grid.empty_copy()
-
-        for coord in grid.iterate_coords():
-            neighbourhood_values = grid.get_neighbourhood_values(coord)
-            new.set(coord, transition_f(tuple(neighbourhood_values) + coord))
-
-        return new
-
     def ca_develop(network: FeedForwardNetwork) -> Iterator[ToroidalCellGrid2D]:
         def transition_f(inputs_discrete_values: Sequence[CELL_STATE_T]) -> CELL_STATE_T:
             neighbour_values, xy_values = inputs_discrete_values[:-2], inputs_discrete_values[-2:]
@@ -120,7 +111,7 @@ def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_c
                 initial_grid=initial_grid,
                 transition_f=transition_f,
                 n=iterations,
-                iterate_f=iterate_ca_once
+                iterate_f=iterate_ca_once_with_coord_inputs
         ):
             yield grid
 
@@ -131,7 +122,6 @@ def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_c
         correctness_fraction = count_correct_cells(grid.get_whole(), target_pattern=target_pattern) / pattern_area
 
         if correctness_fraction >= 1.0:
-            print(grid)
             return correctness_fraction
 
         if correctness_fraction > best:

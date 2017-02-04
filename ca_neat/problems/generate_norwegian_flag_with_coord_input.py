@@ -21,7 +21,7 @@ CA_CONFIG.etc = {
 NEAT_CONFIG = CPPNNEATConfig()
 
 NEAT_CONFIG.pop_size = 200
-NEAT_CONFIG.generations = 400
+NEAT_CONFIG.generations = 700
 NEAT_CONFIG.elitism = 1
 NEAT_CONFIG.survival_threshold = 0.2
 NEAT_CONFIG.stagnation_limit = 15
@@ -76,7 +76,6 @@ def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_c
 
     pattern_w = len(target_pattern[0])
     pattern_h = len(target_pattern)
-    pattern_area = pattern_h * pattern_w
 
     initial_grid = ToroidalCellGrid2D(
         cell_states=alphabet,
@@ -84,21 +83,11 @@ def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_c
         x_range=(0, pattern_w),
         y_range=(0, pattern_h),
     )
+    initial_grid.add_pattern_at_coord(seed, (0, 0))
 
     state_normalization_rules = create_state_normalization_rules(states=alphabet)
     r = radius_2d(neighbourhood)
     coord_normalization_rules = create_state_normalization_rules(states=range(0 - r, max(pattern_h, pattern_w) + r + 1))
-
-    initial_grid.add_pattern_at_coord(seed, (0, 0))
-
-    def iterate_ca_once(grid: CellGrid, transition_f: TRANSITION_F_T) -> CellGrid:
-        new = grid.empty_copy()
-
-        for coord in grid.iterate_coords():
-            neighbourhood_values = grid.get_neighbourhood_values(coord)
-            new.set(coord, transition_f(tuple(neighbourhood_values) + coord))
-
-        return new
 
     def ca_develop(network: FeedForwardNetwork) -> Iterator[ToroidalCellGrid2D]:
         def transition_f(inputs_discrete_values: Sequence[CELL_STATE_T]) -> CELL_STATE_T:
@@ -120,7 +109,7 @@ def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_c
                 initial_grid=initial_grid,
                 transition_f=transition_f,
                 n=iterations,
-                iterate_f=iterate_ca_once
+                iterate_f=iterate_ca_once_with_coord_inputs
         ):
             yield grid
 
@@ -128,10 +117,9 @@ def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_c
 
     best = 0.0
     for i, grid in enumerate(grid_iterations):
-        correctness_fraction = count_correct_cells(grid.get_whole(), target_pattern=target_pattern) / pattern_area
+        correctness_fraction = count_correct_cells(grid.get_whole(), target_pattern=target_pattern) / grid.area
 
         if correctness_fraction >= 1.0:
-            print(grid)
             return correctness_fraction
 
         if correctness_fraction > best:
@@ -169,4 +157,3 @@ if __name__ == '__main__':
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,
         )
-
