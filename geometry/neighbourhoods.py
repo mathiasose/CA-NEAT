@@ -4,6 +4,9 @@ from typing import Sequence, Tuple, Union
 COORD_1D_T = Tuple[int]
 COORD_2D_T = Tuple[int, int]
 COORD_T = Union[COORD_1D_T, COORD_2D_T]
+NEIHGBOURHOOD_1D_T = Sequence[COORD_1D_T]
+NEIHGBOURHOOD_2D_T = Sequence[COORD_2D_T]
+NEIHGBOURHOOD_T = Union[NEIHGBOURHOOD_1D_T, NEIHGBOURHOOD_2D_T]
 
 
 def manhattan_distance(a: COORD_2D_T, b: COORD_2D_T) -> int:
@@ -20,14 +23,14 @@ def chebyshev_distance(a: COORD_2D_T, b: COORD_2D_T) -> int:
     return max(abs(xa - xb), abs(ya - yb))
 
 
-def radius_1d(neighbourhood: Sequence[COORD_1D_T]) -> int:
+def radius_1d(neighbourhood: NEIHGBOURHOOD_1D_T) -> int:
     return max(
         abs(max(neighbourhood, key=itemgetter(0))[0]),
         abs(min(neighbourhood, key=itemgetter(0))[0]),
     )
 
 
-def radius_2d(neighbourhood: Sequence[COORD_2D_T]) -> int:
+def radius_2d(neighbourhood: NEIHGBOURHOOD_2D_T) -> int:
     return max(
         abs(max(neighbourhood, key=itemgetter(0))[0]),
         abs(min(neighbourhood, key=itemgetter(0))[0]),

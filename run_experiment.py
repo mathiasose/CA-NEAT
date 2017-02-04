@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Callable, Dict, Iterator, List
+from typing import Callable, Dict, List
 
 from celery.app import shared_task
 from neat.genome import Genome
@@ -12,12 +12,11 @@ from config import CAConfig, CPPNNEATConfig
 from database import Individual, Scenario, get_db
 from ga.population import (create_initial_population, neat_reproduction,
                            sort_into_species, speciate)
+from ga.selection import PAIR_SELECTION_F_T
 from ga.stagnation import is_species_stagnant
 from report import send_message_via_pushbullet
 
 FITNESS_F_T = Callable[[FeedForwardNetwork, CAConfig], float]
-
-PAIR_SELECTION_F_T = Callable[[List[Genome]], Iterator[Genome]]
 
 AUTO_RETRY = {
     'autoretry_for': (OperationalError,),
@@ -172,8 +171,8 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
 
 
 @shared_task(name='handle_individual', **AUTO_RETRY)
-def handle_individual(db_path: str, scenario_id: int, generation: int, individual_number: int, genotype: Genome,
-                      fitness_f: FITNESS_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> Individual:
+def handle_individual(scenario_id: int, generation: int, individual_number: int, genotype: Genome,
+                      fitness_f: FITNESS_F_T, ca_config: CAConfig) -> Individual:
     phenotype = create_feed_forward_phenotype(genotype)
     try:
         fitness = fitness_f(phenotype, ca_config)

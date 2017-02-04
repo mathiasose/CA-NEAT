@@ -1,14 +1,13 @@
 import math
 import random
-from typing import (Callable, Dict, Iterable, Iterator, List, Optional,
-                    Sequence, Tuple)
+from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 from uuid import uuid4
 
 from neat.genome import Genome
 from neat.species import Species
 
 from config import CPPNNEATConfig
-from ga.selection import TooFewIndividuals, random_choice
+from ga.selection import TooFewIndividuals, random_choice, PAIR_SELECTION_F_T
 
 
 def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
@@ -84,7 +83,7 @@ def sort_into_species(genotypes: Sequence[Genome]) -> Iterable[Species]:
 
 
 def neat_reproduction(species: Sequence[Species], pop_size: int, survival_threshold: float,
-                      pair_selection_f: Callable[[Sequence[Genome]], Genome], elitism: int = 0, **kwargs) \
+                      pair_selection_f: PAIR_SELECTION_F_T, elitism: int = 0, **kwargs) \
         -> Tuple[List[Species], List[Genome]]:
     species_fitness = []
     avg_adjusted_fitness = 0.0
