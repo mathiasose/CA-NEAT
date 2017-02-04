@@ -3,5 +3,5 @@
 .idea/
 __pycache__/
 db/
-problems/results/
+ca_neat/problems/results/
 secrets.py
