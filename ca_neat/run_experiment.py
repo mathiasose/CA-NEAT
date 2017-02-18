@@ -14,6 +14,7 @@ from ca_neat.ga.population import create_initial_population, neat_reproduction, 
 from ca_neat.ga.selection import PAIR_SELECTION_F_T
 from ca_neat.ga.stagnation import is_species_stagnant
 from ca_neat.report import send_message_via_pushbullet
+from ca_neat.ca.calculate_lambda import calculate_lambda
 
 FITNESS_F_T = Callable[[FeedForwardNetwork, CAConfig], float]
 
@@ -61,13 +62,11 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
     from celery import group, chord
 
     grouped_tasks = group(handle_individual.s(
-        db_path=db_path,
         scenario_id=scenario_id,
         generation=generation,
         individual_number=i,
         genotype=genotype,
         fitness_f=fitness_f,
-        neat_config=neat_config,
         ca_config=ca_config,
     ) for i, genotype in enumerate(genotypes))
 
@@ -183,12 +182,15 @@ def handle_individual(scenario_id: int, generation: int, individual_number: int,
     if hasattr(genotype, 'fitness'):
         genotype.fitness = fitness
 
+    λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
+
     individual = Individual(
         scenario_id=scenario_id,
         individual_number=individual_number,
         genotype=genotype,
         fitness=fitness,
         generation=generation,
+        λ=λ,
     )
 
     return individual

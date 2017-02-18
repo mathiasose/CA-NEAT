@@ -29,14 +29,16 @@ class Individual(Base):
     generation = Column(Integer, primary_key=True, index=True)
     genotype = Column(PickleType(pickler=dill))
     fitness = Column(Float, index=True)
+    λ = Column(Float)
     timestamp = Column(DateTime, default=now(), index=True)
 
     def __repr__(self):
-        return 'Scenario {}, generation {}, individual {}, fitness {}'.format(
+        return 's={}, g={}, n={}, f={}, λ={}'.format(
             self.scenario_id,
             self.generation,
             self.individual_number,
-            self.fitness
+            round(self.fitness, 2),
+            round(self.λ, 2),
         )
 
 
