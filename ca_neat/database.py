@@ -30,6 +30,7 @@ class Individual(Base):
     genotype = Column(PickleType(pickler=dill))
     fitness = Column(Float, index=True)
     λ = Column(Float)
+    species = Column(Integer, index=True)
     timestamp = Column(DateTime, default=now(), index=True)
 
     def __repr__(self):

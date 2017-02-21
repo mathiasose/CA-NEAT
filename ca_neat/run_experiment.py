@@ -113,7 +113,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
             fitnesses_by_species = defaultdict(list)  # type: Dict[int, List[float]]
 
             for individual in generation:
-                fitnesses_by_species[individual.genotype.species_id].append(individual.fitness)
+                fitnesses_by_species[individual.species].append(individual.fitness)
 
             fitnesses_by_species_by_generation.append(fitnesses_by_species)
 
@@ -179,8 +179,7 @@ def handle_individual(scenario_id: int, generation: int, individual_number: int,
 
     assert 0.0 <= fitness <= 1.0
 
-    if hasattr(genotype, 'fitness'):
-        genotype.fitness = fitness
+    genotype.fitness = fitness
 
     λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
 
@@ -191,6 +190,7 @@ def handle_individual(scenario_id: int, generation: int, individual_number: int,
         fitness=fitness,
         generation=generation,
         λ=λ,
+        species=genotype.species_id,
     )
 
     return individual
