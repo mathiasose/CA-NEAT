@@ -12,7 +12,7 @@ from ca_neat.ga.selection import PAIR_SELECTION_F_T, TooFewIndividuals, random_c
 
 def create_initial_population(neat_config: CPPNNEATConfig) -> Iterator[Genome]:
     for _ in range(neat_config.pop_size):
-        g_id = uuid4()
+        g_id = uuid4().int
         g = neat_config.genotype.create_unconnected(g_id, neat_config)
 
         hidden_nodes = neat_config.initial_hidden_nodes
@@ -67,7 +67,7 @@ def speciate(genotypes: Sequence[Genome], compatibility_threshold: float,
     return species
 
 
-def sort_into_species(genotypes: Sequence[Genome]) -> Iterable[Species]:
+def sort_into_species(genotypes: Iterable[Genome]) -> Iterable[Species]:
     species = {}  # type: Dict[int, Species]
     for gt in genotypes:
         species_id = gt.species_id
@@ -82,7 +82,7 @@ def sort_into_species(genotypes: Sequence[Genome]) -> Iterable[Species]:
     return species.values()
 
 
-def neat_reproduction(species: Sequence[Species], pop_size: int, survival_threshold: float,
+def neat_reproduction(species: Iterable[Species], pop_size: int, survival_threshold: float,
                       pair_selection_f: PAIR_SELECTION_F_T, elitism: int = 0, **kwargs) \
         -> Tuple[List[Species], List[Genome]]:
     species_fitness = []

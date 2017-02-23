@@ -1,6 +1,8 @@
 import logging
 from collections import defaultdict
+from statistics import median, mean
 from typing import Callable, Dict, List
+from uuid import UUID
 
 from celery.app import shared_task
 from neat.genome import Genome
@@ -12,6 +14,7 @@ from ca_neat.config import CAConfig, CPPNNEATConfig
 from ca_neat.database import Individual, Scenario, get_db
 from ca_neat.ga.population import create_initial_population, neat_reproduction, sort_into_species, speciate
 from ca_neat.ga.selection import PAIR_SELECTION_F_T
+from ca_neat.ga.serialize import serialize_gt, deserialize_gt
 from ca_neat.ga.stagnation import is_species_stagnant
 from ca_neat.report import send_message_via_pushbullet
 from ca_neat.ca.calculate_lambda import calculate_lambda
@@ -99,7 +102,14 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
         logging.info(msg)
         return msg
 
-    species = sort_into_species([individual.genotype for individual in population])
+    species = sort_into_species(
+        genotypes=(
+            deserialize_gt(
+                gt_json_bytes=individual.genotype,
+                neat_config=neat_config
+            ) for individual in population
+        )
+    )
 
     stagnation_limit = neat_config.stagnation_limit
     if (not stagnation_limit) or (generation_n < stagnation_limit):
@@ -173,24 +183,22 @@ def handle_individual(scenario_id: int, generation: int, individual_number: int,
                       fitness_f: FITNESS_F_T, ca_config: CAConfig) -> Individual:
     phenotype = create_feed_forward_phenotype(genotype)
     try:
-        fitness = fitness_f(phenotype, ca_config)
+        genotype.fitness = fitness_f(phenotype, ca_config)
     except OverflowError:
-        fitness = 0.0
+        genotype.fitness = 0.0
 
-    assert 0.0 <= fitness <= 1.0
-
-    genotype.fitness = fitness
+    assert 0.0 <= genotype.fitness <= 1.0
 
     λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
 
     individual = Individual(
         scenario_id=scenario_id,
         individual_number=individual_number,
-        genotype=genotype,
-        fitness=fitness,
+        genotype=serialize_gt(genotype),
+        fitness=genotype.fitness,
         generation=generation,
         λ=λ,
-        species=genotype.species_id,
+        species=UUID(int=genotype.species_id),
     )
 
     return individual

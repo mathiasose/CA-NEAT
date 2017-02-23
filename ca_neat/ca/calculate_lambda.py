@@ -40,7 +40,7 @@ def calculate_lambda(cppn: FeedForwardNetwork, ca_config: CAConfig) -> float:
 
 
 if __name__ == '__main__':
-    from ca_neat.problems.generate_border import CA_CONFIG, NEAT_CONFIG
+    from ca_neat.problems.morphogenesis.generate_border import CA_CONFIG, NEAT_CONFIG
 
     gt = next(create_initial_population(NEAT_CONFIG))
     λ = calculate_lambda(create_feed_forward_phenotype(gt), CA_CONFIG)
