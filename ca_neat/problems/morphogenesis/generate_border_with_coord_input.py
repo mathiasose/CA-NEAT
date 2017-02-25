@@ -57,16 +57,16 @@ PAIR_SELECTION_F = sigma_scaled
 
 
 def morphogenesis_fitness_f_with_coord_input(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
-    from ca.iterate import iterate_ca_once_with_coord_inputs, iterate_ca_n_times_or_until_cycle_found
-    from patterns.replicate_pattern import count_correct_cells
-    from geometry.cell_grid import ToroidalCellGrid2D
-    from utils import create_state_normalization_rules
+    from ca_neat.ca.iterate import iterate_ca_once_with_coord_inputs, iterate_ca_n_times_or_until_cycle_found
+    from ca_neat.patterns.replicate_pattern import count_correct_cells
+    from ca_neat.geometry.cell_grid import ToroidalCellGrid2D
+    from ca_neat.utils import create_state_normalization_rules
     from operator import itemgetter
     from neat.nn import FeedForwardNetwork
     from math import exp
     from typing import Sequence, Iterator
-    from geometry.cell_grid import CELL_STATE_T
-    from geometry.neighbourhoods import radius_2d
+    from ca_neat.geometry.cell_grid import CELL_STATE_T
+    from ca_neat.geometry.neighbourhoods import radius_2d
 
     neighbourhood = ca_config.neighbourhood
     alphabet = ca_config.alphabet
