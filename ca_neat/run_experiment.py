@@ -18,6 +18,7 @@ from ca_neat.ga.serialize import serialize_gt, deserialize_gt
 from ca_neat.ga.stagnation import is_species_stagnant
 from ca_neat.report import send_message_via_pushbullet
 from ca_neat.ca.calculate_lambda import calculate_lambda
+from celery_app import app
 
 FITNESS_F_T = Callable[[FeedForwardNetwork, CAConfig], float]
 
@@ -80,7 +81,7 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
     chord(grouped_tasks, final_task)()
 
 
-@shared_task(name='finalize_generation', bind=True, **AUTO_RETRY)
+@app.task(name='finalize_generation', bind=True, **AUTO_RETRY)
 def finalize_generation(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
                         pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
     db = get_db(db_path)
@@ -178,7 +179,7 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     )
 
 
-@shared_task(name='handle_individual', **AUTO_RETRY)
+@app.task(name='handle_individual', **AUTO_RETRY)
 def handle_individual(scenario_id: int, generation: int, individual_number: int, genotype: Genome,
                       fitness_f: FITNESS_F_T, ca_config: CAConfig) -> Individual:
     phenotype = create_feed_forward_phenotype(genotype)
