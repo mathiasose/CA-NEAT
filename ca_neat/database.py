@@ -1,13 +1,13 @@
+import uuid
+
 from sqlalchemy import create_engine
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative.api import declarative_base
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.functions import now
 from sqlalchemy.sql.schema import Column, ForeignKey
-from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, String, JSON, Text, BigInteger, UnicodeText, Binary, \
-    LargeBinary
-from sqlalchemy.types import TypeDecorator, CHAR
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
+from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, LargeBinary, String
+from sqlalchemy.types import CHAR, TypeDecorator
 
 
 class GUID(TypeDecorator):
@@ -31,11 +31,10 @@ class GUID(TypeDecorator):
         elif dialect.name == 'postgresql':
             return str(value)
         else:
-            if not isinstance(value, uuid.UUID):
-                return "%.32x" % uuid.UUID(value).int
-            else:
-                # hexstring
-                return "%.32x" % value.int
+            if isinstance(value, uuid.UUID):
+                value = value.int
+
+            return "%.32x" % value
 
     def process_result_value(self, value, dialect):
         if value is None:

@@ -1,23 +1,21 @@
 import logging
-from collections import defaultdict
-from statistics import median, mean
+from statistics import median
 from typing import Callable, Dict, List
 from uuid import UUID
 
-from celery.app import shared_task
 from neat.genome import Genome
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 from neat.population import CompleteExtinctionException
 from sqlalchemy.exc import OperationalError
 
+from ca_neat.ca.calculate_lambda import calculate_lambda
 from ca_neat.config import CAConfig, CPPNNEATConfig
 from ca_neat.database import Individual, Scenario, get_db
 from ca_neat.ga.population import create_initial_population, neat_reproduction, sort_into_species, speciate
 from ca_neat.ga.selection import PAIR_SELECTION_F_T
-from ca_neat.ga.serialize import serialize_gt, deserialize_gt
-from ca_neat.ga.stagnation import is_species_stagnant
+from ca_neat.ga.serialize import deserialize_gt, serialize_gt
 from ca_neat.report import send_message_via_pushbullet
-from ca_neat.ca.calculate_lambda import calculate_lambda
+from ca_neat.utils import pluck
 from celery_app import app
 
 FITNESS_F_T = Callable[[FeedForwardNetwork, CAConfig], float]
@@ -116,23 +114,25 @@ def finalize_generation(task, results, db_path: str, scenario_id: int, generatio
     if (not stagnation_limit) or (generation_n < stagnation_limit):
         alive_species = species
     else:
-        # TODO can this be rewritten to one query?
-        generation_range = (generation_n - stagnation_limit, next_gen)
-        fitnesses_by_species_by_generation = []
-        for n in range(*generation_range):
-            generation = db.get_generation(scenario_id=scenario_id, generation=n, session=session)
-            fitnesses_by_species = defaultdict(list)  # type: Dict[int, List[float]]
+        all_individuals = db \
+            .get_individuals(scenario_id=scenario_id, session=session) \
+            .filter(generation_n >= generation_n - stagnation_limit)
 
-            for individual in generation:
-                fitnesses_by_species[individual.species].append(individual.fitness)
+        stagnant: Dict[int, bool] = {}
+        medians: Dict[int, float] = {}
+        for spec in species:
+            individuals = list(
+                all_individuals \
+                    .filter(Individual.species == spec.ID) \
+                    .order_by(Individual.generation)
+            )
+            m = median(pluck(individuals, 'fitness'))
+            medians[spec.ID] = m
+            stagnant[spec.ID] = individuals[0].fitness == individuals[-1].fitness
 
-            fitnesses_by_species_by_generation.append(fitnesses_by_species)
+        median_of_medians = median(medians.values())
 
-        alive_species = [s for s in species if not is_species_stagnant(
-            fitnesses_by_species_by_generation=fitnesses_by_species_by_generation,
-            species_id=s.ID,
-            stagnation_limit=stagnation_limit,
-        )]
+        alive_species = set(s for s in species if (not stagnant[s.ID]) or (medians[s.ID] >= median_of_medians))
 
     if not alive_species:
         send_message_via_pushbullet(
