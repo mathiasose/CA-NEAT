@@ -76,7 +76,7 @@ class Individual(Base):
             self.generation,
             self.individual_number,
             round(self.fitness, 2),
-            round(self.λ, 2),
+            round(self.λ, 2) if self.λ else 'N/A',
         )
 
 

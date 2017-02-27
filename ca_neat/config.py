@@ -37,3 +37,4 @@ class CAConfig:
     r = None
     initial = None
     etc = {}  # type: Dict[str, Any]
+    compute_lambda = True

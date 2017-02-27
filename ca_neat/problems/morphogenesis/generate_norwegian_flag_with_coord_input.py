@@ -17,6 +17,7 @@ CA_CONFIG.etc = {
     'target_pattern': NORWEGIAN,
     'seed': SEED_7X7,
 }
+CA_CONFIG.compute_lambda = False
 
 NEAT_CONFIG = CPPNNEATConfig()
 

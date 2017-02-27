@@ -17,6 +17,7 @@ CA_CONFIG.etc = {
     'target_pattern': BORDER,
     'seed': SEED_6X6,
 }
+CA_CONFIG.compute_lambda = False
 
 NEAT_CONFIG = CPPNNEATConfig()
 

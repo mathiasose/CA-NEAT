@@ -190,7 +190,10 @@ def handle_individual(scenario_id: int, generation: int, individual_number: int,
 
     assert 0.0 <= genotype.fitness <= 1.0
 
-    λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
+    if ca_config.compute_lambda:
+        λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
+    else:
+        λ = None
 
     individual = Individual(
         scenario_id=scenario_id,
