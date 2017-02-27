@@ -6,3 +6,4 @@ matplotlib==1.5.3
 seaborn==0.7.1
 pushbullet.py==0.10.0
 graphviz==0.5.1
+celery-dill-serializer==0.1.3
