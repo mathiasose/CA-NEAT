@@ -72,20 +72,43 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
         ca_config=ca_config,
     ) for i, genotype in enumerate(genotypes))
 
-    final_task = finalize_generation.subtask(
+    final_task = persist_results.subtask(
         args=(db_path, scenario_id, generation, fitness_f, pair_selection_f, neat_config, ca_config)
     )
 
     chord(grouped_tasks, final_task)()
 
 
-@app.task(name='finalize_generation', bind=True, **AUTO_RETRY)
-def finalize_generation(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
-                        pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
+@app.task(name='persist_results', bind=True, **AUTO_RETRY)
+def persist_results(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
+                    pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
     db = get_db(db_path)
     session = db.Session()
     session.bulk_save_objects(results)
     session.commit()
+
+    finalize_generation.delay(
+        db_path=db_path,
+        scenario_id=scenario_id,
+        generation_n=generation_n,
+        fitness_f=fitness_f,
+        pair_selection_f=pair_selection_f,
+        neat_config=neat_config,
+        ca_config=ca_config
+    )
+
+    return 'Scenario {scenario_id}, generation {generation_n}, {n_individuals} individuals'.format(
+        scenario_id=scenario_id,
+        generation_n=generation_n,
+        n_individuals=len(results),
+    )
+
+
+@app.task(name='finalize_generation', bind=True, **AUTO_RETRY)
+def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
+                        pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
+    db = get_db(db_path)
+    session = db.Session()
 
     scenario = db.get_scenario(scenario_id, session=session)
     population = db.get_generation(scenario_id, generation_n, session=session)
