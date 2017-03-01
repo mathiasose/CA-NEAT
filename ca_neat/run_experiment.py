@@ -1,11 +1,12 @@
 import logging
+import sqlite3
 from statistics import median
 from typing import Callable, Dict, List
 from uuid import UUID
 
+import sqlalchemy
 from neat.genome import Genome
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
-from neat.population import CompleteExtinctionException
 from sqlalchemy.exc import OperationalError
 
 from ca_neat.ca.calculate_lambda import calculate_lambda
@@ -21,7 +22,7 @@ from celery_app import app
 FITNESS_F_T = Callable[[FeedForwardNetwork, CAConfig], float]
 
 AUTO_RETRY = {
-    'autoretry_for': (OperationalError,),
+    'autoretry_for': (sqlalchemy.exc.OperationalError, sqlite3.OperationalError),
     'retry_kwargs': {'countdown': 5},
 }
 
@@ -86,8 +87,9 @@ def persist_results(task, results, db_path: str, scenario_id: int, generation_n:
     session = db.Session()
     session.bulk_save_objects(results)
     session.commit()
+    session.close()
 
-    finalize_generation.delay(
+    check_if_done.delay(
         db_path=db_path,
         scenario_id=scenario_id,
         generation_n=generation_n,
@@ -104,9 +106,9 @@ def persist_results(task, results, db_path: str, scenario_id: int, generation_n:
     )
 
 
-@app.task(name='finalize_generation', bind=True, **AUTO_RETRY)
-def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
-                        pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
+@app.task(name='check_if_done', bind=True, **AUTO_RETRY)
+def check_if_done(task, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
+                  pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
     db = get_db(db_path)
     session = db.Session()
 
@@ -118,11 +120,38 @@ def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int,
     optimal_solution = population.filter(Individual.fitness >= 1.0)
     optimal_found = (neat_config.stop_when_optimal_found and session.query(optimal_solution.exists()).scalar())
 
+    session.close()
+
     if (next_gen >= scenario.generations) or optimal_found:
-        msg = 'Scenario {} finished after {} generations'.format(scenario_id, next_gen)
-        send_message_via_pushbullet.delay(title=db_path, body=msg)
-        logging.info(msg)
-        return msg
+        return '{} finished after {} generations'.format(
+            scenario,
+            next_gen,
+        )
+    else:
+        finalize_generation.delay(
+            db_path=db_path,
+            scenario_id=scenario_id,
+            generation_n=generation_n,
+            fitness_f=fitness_f,
+            pair_selection_f=pair_selection_f,
+            neat_config=neat_config,
+            ca_config=ca_config
+        )
+
+        return '{scenario}, generation {generation_n}'.format(
+            scenario=scenario,
+            generation_n=generation_n,
+        )
+
+
+@app.task(name='finalize_generation', bind=True, **AUTO_RETRY)
+def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
+                        pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
+    db = get_db(db_path)
+    session = db.Session()
+
+    scenario = db.get_scenario(scenario_id, session=session)
+    population = db.get_generation(scenario_id, generation_n, session=session)
 
     species = sort_into_species(
         genotypes=(
@@ -157,15 +186,7 @@ def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int,
 
         alive_species = set(s for s in species if (not stagnant[s.ID]) or (medians[s.ID] >= median_of_medians))
 
-    if not alive_species:
-        send_message_via_pushbullet(
-            title='Halted: {}'.format(scenario.description),
-            body='Complete extinction for scenario {} at generation {}'.format(
-                scenario_id,
-                generation_n,
-            ),
-        )
-        raise CompleteExtinctionException
+    session.close()
 
     next_gen_species, nex_gen_genotypes = neat_reproduction(
         species=alive_species,
@@ -184,15 +205,13 @@ def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int,
     initialize_generation(
         db_path=db_path,
         scenario_id=scenario_id,
-        generation=next_gen,
+        generation=generation_n + 1,
         genotypes=nex_gen_genotypes,
         fitness_f=fitness_f,
         pair_selection_f=pair_selection_f,
         neat_config=neat_config,
         ca_config=ca_config,
     )
-
-    session.close()
 
     return '{scenario}, generation {generation_n}, {n_individuals} individuals, {n_species} species'.format(
         scenario=scenario,
