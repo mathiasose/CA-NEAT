@@ -1,12 +1,14 @@
 import logging
 import sqlite3
 from statistics import median
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Tuple, Set
 from uuid import UUID
 
 import sqlalchemy
+from celery.canvas import chain
 from neat.genome import Genome
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
+from neat.species import Species
 from sqlalchemy.exc import OperationalError
 
 from ca_neat.ca.calculate_lambda import calculate_lambda
@@ -128,15 +130,23 @@ def check_if_done(task, db_path: str, scenario_id: int, generation_n: int, fitne
             next_gen,
         )
     else:
-        finalize_generation.delay(
-            db_path=db_path,
-            scenario_id=scenario_id,
-            generation_n=generation_n,
-            fitness_f=fitness_f,
-            pair_selection_f=pair_selection_f,
-            neat_config=neat_config,
-            ca_config=ca_config
-        )
+        chain(
+            reproduction_io.s(
+                db_path=db_path,
+                scenario_id=scenario_id,
+                generation_n=generation_n,
+                neat_config=neat_config,
+            ),
+            reproduction.s(
+                db_path=db_path,
+                scenario_id=scenario_id,
+                generation_n=generation_n,
+                fitness_f=fitness_f,
+                pair_selection_f=pair_selection_f,
+                neat_config=neat_config,
+                ca_config=ca_config
+            )
+        ).apply_async()
 
         return '{scenario}, generation {generation_n}'.format(
             scenario=scenario,
@@ -144,9 +154,9 @@ def check_if_done(task, db_path: str, scenario_id: int, generation_n: int, fitne
         )
 
 
-@app.task(name='finalize_generation', bind=True, **AUTO_RETRY)
-def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
-                        pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
+@app.task(name='reproduction_io', bind=True, **AUTO_RETRY)
+def reproduction_io(task, db_path: str, scenario_id: int, generation_n: int, neat_config: CPPNNEATConfig
+                    ) -> Tuple[Scenario, Set[Species]]:
     db = get_db(db_path)
     session = db.Session()
 
@@ -187,6 +197,14 @@ def finalize_generation(task, db_path: str, scenario_id: int, generation_n: int,
         alive_species = set(s for s in species if (not stagnant[s.ID]) or (medians[s.ID] >= median_of_medians))
 
     session.close()
+
+    return scenario, alive_species
+
+
+@app.task(name='reproduction', bind=True, **AUTO_RETRY)
+def reproduction(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
+                 pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
+    scenario, alive_species = results
 
     next_gen_species, nex_gen_genotypes = neat_reproduction(
         species=alive_species,

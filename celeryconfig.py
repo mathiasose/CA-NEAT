@@ -12,6 +12,7 @@ result_persistent = False
 task_routes = {
     'persist_results': {'queue': 'db_io_tasks'},
     'check_if_done': {'queue': 'db_io_tasks'},
+    'reproduction_io': {'queue': 'db_io_tasks'},
 }
 
 # task_always_eager = True

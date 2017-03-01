@@ -68,7 +68,7 @@ def speciate(genotypes: Sequence[Genome], compatibility_threshold: float,
 
 
 def sort_into_species(genotypes: Iterable[Genome]) -> Iterable[Species]:
-    species = {}  # type: Dict[int, Species]
+    species: Dict[int, Species] = {}
     for gt in genotypes:
         species_id = gt.species_id
 
@@ -79,7 +79,7 @@ def sort_into_species(genotypes: Iterable[Genome]) -> Iterable[Species]:
         except KeyError:
             species[species_id] = Species(gt, species_id)
 
-    return species.values()
+    return set(species.values())
 
 
 def neat_reproduction(species: Iterable[Species], pop_size: int, survival_threshold: float,
