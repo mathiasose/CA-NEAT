@@ -131,20 +131,13 @@ def check_if_done(task, db_path: str, scenario_id: int, generation_n: int, fitne
         )
     else:
         chain(
-            reproduction_io.s(
-                db_path=db_path,
-                scenario_id=scenario_id,
-                generation_n=generation_n,
-                neat_config=neat_config,
+            reproduction_io.subtask(
+                args=(db_path, scenario_id, generation_n, neat_config),
+                priority=100,
             ),
-            reproduction.s(
-                db_path=db_path,
-                scenario_id=scenario_id,
-                generation_n=generation_n,
-                fitness_f=fitness_f,
-                pair_selection_f=pair_selection_f,
-                neat_config=neat_config,
-                ca_config=ca_config
+            reproduction.subtask(
+                args=(db_path, scenario_id, generation_n, fitness_f, pair_selection_f, neat_config, ca_config),
+                priority=200,
             )
         ).apply_async()
 
