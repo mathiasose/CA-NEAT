@@ -8,6 +8,7 @@ from sqlalchemy.sql.functions import now
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, LargeBinary, String
 from sqlalchemy.types import CHAR, TypeDecorator
+from sqlalchemy_utils.functions.database import database_exists, create_database
 
 
 class GUID(TypeDecorator):
@@ -83,6 +84,9 @@ class Individual(Base):
 class Db:
     def __init__(self, path, echo=True):
         self.engine = create_engine(path, echo=echo)
+        if not database_exists(self.engine.url):
+            create_database(self.engine.url)
+
         Base.metadata.create_all(self.engine)
         from sqlalchemy.orm import scoped_session
         self.Session = scoped_session(sessionmaker(bind=self.engine))

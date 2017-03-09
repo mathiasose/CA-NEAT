@@ -141,8 +141,8 @@ if __name__ == '__main__':
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
 
-    DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format('2017-01-30 09:30:09.020771'))
     #DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
+    DB_PATH = 'postgresql+psycopg2:///' + '{}_{}'.format(PROBLEM_NAME, datetime.now().isoformat())
 
     DESCRIPTION = '"Norwegian flag morphogenesis with XY inputs"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,
