@@ -178,7 +178,7 @@ def reproduction_io(task, db_path: str, scenario_id: int, generation_n: int, nea
         for spec in species:
             individuals = list(
                 all_individuals \
-                    .filter(Individual.species == spec.ID) \
+                    .filter(Individual.species == UUID(int=spec.ID)) \
                     .order_by(Individual.generation)
             )
             m = median(pluck(individuals, 'fitness'))
