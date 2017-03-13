@@ -15,6 +15,12 @@ task_routes = {
     'reproduction_io': {'queue': 'db_io_tasks'},
 }
 
-# task_always_eager = True
+result_expires = 60 * 60  # seconds
 
-# broker_url = 'sqla+sqlite:///celerydb.sqlite'
+beat_schedule = {
+    'celery.backend_cleanup': {
+        'tasks': 'celery.backend_cleanup',
+        'schedule': 2 * result_expires,
+        'args': (),
+    },
+}
