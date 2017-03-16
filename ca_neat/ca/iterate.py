@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Callable, Iterator, Sequence
 
 from ca_neat.geometry.cell_grid import CELL_STATE_T, CellGrid
@@ -33,8 +34,9 @@ def iterate_ca_n_times(initial_grid: CellGrid, transition_f: TRANSITION_F_T, n: 
                        iterate_f: ITERATE_F_T = iterate_ca_once) -> Iterator[CellGrid]:
     grid = initial_grid
 
+    memoized_transition_f = lru_cache(maxsize=None)(transition_f)
     for _ in range(n):
-        new = iterate_f(grid, transition_f=transition_f)
+        new = iterate_f(grid, transition_f=memoized_transition_f)
         yield new
         grid = new
 
