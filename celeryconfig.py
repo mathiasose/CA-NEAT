@@ -10,16 +10,16 @@ result_backend = 'db+sqlite:///results.sqlite'
 result_persistent = False
 
 task_routes = {
-    'persist_results': {'queue': 'db_io_tasks'},
-    'check_if_done': {'queue': 'db_io_tasks'},
-    'reproduction_io': {'queue': 'db_io_tasks'},
+    'persist_results': {'queue': 'db_write'},
+    'check_if_done': {'queue': 'db_read'},
+    'reproduction_io': {'queue': 'db_read'},
 }
 
 result_expires = 60 * 60  # seconds
 
 beat_schedule = {
     'celery.backend_cleanup': {
-        'tasks': 'celery.backend_cleanup',
+        'task': 'celery.backend_cleanup',
         'schedule': 2 * result_expires,
         'args': (),
     },

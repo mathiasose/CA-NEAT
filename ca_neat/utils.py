@@ -22,6 +22,11 @@ def random_string(alphabet, length, **kwargs):
     return ''.join(choice(alphabet) for _ in range(length))
 
 
+def invert_pattern(pattern, alphabet):
+    a, b = alphabet
+    return list(map(lambda value: (a if value == b else b), pattern))
+
+
 def splice(a, b, **kwargs):
     i = randrange(len(a))
     return a[:i] + b[i:]
@@ -67,6 +72,7 @@ def create_state_normalization_rules(states, range=(-1, 1)) -> dict:
     step = (hi - lo) / n_states
 
     return {s: lo + i * step for i, s in enumerate(states)}
+
 
 if __name__ == '__main__':
     d = create_state_normalization_rules('abcd')

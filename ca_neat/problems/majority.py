@@ -11,30 +11,26 @@ from ca_neat.geometry.cell_grid import CELL_STATE_T
 from ca_neat.geometry.neighbourhoods import LLLCRRR
 from ca_neat.patterns.patterns import ALPHABET_2
 from ca_neat.run_experiment import initialize_scenario
+from ca_neat.utils import random_string, invert_pattern
+
+N = 49
 
 
-def create_binary_pattern(alphabet: Tuple[CELL_STATE_T, CELL_STATE_T]) -> Sequence[CELL_STATE_T]:
+def create_binary_pattern(alphabet: Tuple[CELL_STATE_T, CELL_STATE_T], r=1.0 / 4.0) -> Sequence[CELL_STATE_T]:
     from random import choice, shuffle
 
     a, b = alphabet
 
-    xa, xb = (0, 149)
-    r = xb - xa
+    r = int(r * N)
 
-    values = [a] * (r // 3) + [b] * (r // 3)
+    values = [a] * r + [b] * (N - r)
 
-    while len(values) < r:
+    while len(values) < N:
         values.append(choice(alphabet))
 
     shuffle(values)
 
     return values
-
-
-def invert_pattern(pattern: Sequence[CELL_STATE_T]) -> Sequence[CELL_STATE_T]:
-    a, b = ALPHABET_2
-
-    return list(map(lambda value: (a if value == b else b), pattern))
 
 
 def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
@@ -47,6 +43,7 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
     from ca_neat.geometry.cell_grid import ToroidalCellGrid1D
     from math import exp
     from ca_neat.geometry.cell_grid import CELL_STATE_T
+    from typing import Sequence
 
     alphabet = ca_config.alphabet
 
@@ -97,48 +94,24 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
 CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = ALPHABET_2
 CA_CONFIG.neighbourhood = LLLCRRR
-CA_CONFIG.iterations = 149
+CA_CONFIG.iterations = N
+CA_CONFIG.compute_lambda = False
 
-patterns = [create_binary_pattern(alphabet=CA_CONFIG.alphabet) for _ in range(1)]
-patterns.extend(list(map(invert_pattern, patterns)))
+patterns = [random_string(alphabet=CA_CONFIG.alphabet, length=N) for _ in range(1)]
+patterns.extend(list(map(lambda pattern: invert_pattern(pattern, alphabet=CA_CONFIG.alphabet), patterns)))
 CA_CONFIG.etc = {
     'test_patterns': [(pattern, mode(pattern)) for pattern in patterns]
 }
 
 NEAT_CONFIG = CPPNNEATConfig()
 
-NEAT_CONFIG.pop_size = 20
-NEAT_CONFIG.generations = 10000
+NEAT_CONFIG.pop_size = 200
+NEAT_CONFIG.generations = 1000
 NEAT_CONFIG.elitism = 1
-NEAT_CONFIG.survival_threshold = 0.2
-NEAT_CONFIG.stagnation_limit = 15
-
-NEAT_CONFIG.compatibility_threshold = 3.0
-NEAT_CONFIG.excess_coefficient = 1.0
-NEAT_CONFIG.disjoint_coefficient = 1.0
-NEAT_CONFIG.weight_coefficient = 0.5
 
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
 NEAT_CONFIG.initial_hidden_nodes = 0
-
-NEAT_CONFIG.max_weight = 30
-NEAT_CONFIG.min_weight = -30
-NEAT_CONFIG.weight_stdev = 1.0
-
-NEAT_CONFIG.prob_add_conn = 0.5
-NEAT_CONFIG.prob_add_node = 0.5
-NEAT_CONFIG.prob_delete_conn = 0.25
-NEAT_CONFIG.prob_delete_node = 0.25
-NEAT_CONFIG.prob_mutate_bias = 0.8
-NEAT_CONFIG.bias_mutation_power = 0.5
-NEAT_CONFIG.prob_mutate_response = 0.8
-NEAT_CONFIG.response_mutation_power = 0.5
-NEAT_CONFIG.prob_mutate_weight = 0.8
-NEAT_CONFIG.prob_replace_weight = 0.1
-NEAT_CONFIG.weight_mutation_power = 0.5
-NEAT_CONFIG.prob_mutate_activation = 0.002
-NEAT_CONFIG.prob_toggle_link = 0.01
 
 PAIR_SELECTION_F = sigma_scaled
 
@@ -149,14 +122,14 @@ if __name__ == '__main__':
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
 
-    DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
+    DB_PATH = 'postgresql+psycopg2:///' + '{}_{}'.format(PROBLEM_NAME, datetime.now().isoformat())
 
     DESCRIPTION = '"Majority problem"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,
         gens=NEAT_CONFIG.generations
     )
 
-    for _ in range(1):
+    for _ in range(100):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
