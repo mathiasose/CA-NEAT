@@ -235,18 +235,19 @@ def reproduction(task, results, db_path: str, scenario_id: int, generation_n: in
 @app.task(name='handle_individual', **AUTO_RETRY)
 def handle_individual(scenario_id: int, generation: int, individual_number: int, genotype: Genome,
                       fitness_f: FITNESS_F_T, ca_config: CAConfig) -> Individual:
-    phenotype = create_feed_forward_phenotype(genotype)
-    try:
-        genotype.fitness = fitness_f(phenotype, ca_config)
-    except OverflowError:
-        genotype.fitness = 0.0
+    λ = None
+    if not genotype.fitness:
+        phenotype = create_feed_forward_phenotype(genotype)
 
-    assert 0.0 <= genotype.fitness <= 1.0
+        try:
+            genotype.fitness = fitness_f(phenotype, ca_config)
+        except OverflowError:
+            genotype.fitness = 0.0
 
-    if ca_config.compute_lambda:
-        λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
-    else:
-        λ = None
+        assert 0.0 <= genotype.fitness <= 1.0
+
+        if ca_config.compute_lambda:
+            λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
 
     individual = Individual(
         scenario_id=scenario_id,

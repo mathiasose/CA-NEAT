@@ -53,8 +53,8 @@ def deserialize_gt(gt_json_bytes: bytes, neat_config: CPPNNEATConfig) -> Genome:
         ng_dict['ID']: NodeGene(
             ID=ng_dict['ID'],
             node_type=ng_dict['type'],
-            bias=ng_dict['bias'],
-            response=ng_dict['response'],
+            bias=float(ng_dict['bias']),
+            response=float(ng_dict['response']),
             activation_type=ng_dict['activation_type'],
         ) for ng_dict in gt_dict['node_genes']
         }
@@ -63,7 +63,7 @@ def deserialize_gt(gt_json_bytes: bytes, neat_config: CPPNNEATConfig) -> Genome:
         (cg_dict['in_node_id'], cg_dict['out_node_id']): ConnectionGene(
             in_node_id=cg_dict['in_node_id'],
             out_node_id=cg_dict['out_node_id'],
-            weight=cg_dict['weight'],
+            weight=float(cg_dict['weight']),
             enabled=cg_dict['enabled'],
         ) for cg_dict in gt_dict['conn_genes']
         }

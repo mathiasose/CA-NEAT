@@ -16,16 +16,16 @@ from ca_neat.utils import random_string, invert_pattern
 N = 49
 
 
-def create_binary_pattern(alphabet: Tuple[CELL_STATE_T, CELL_STATE_T], r=1.0 / 4.0) -> Sequence[CELL_STATE_T]:
+def create_binary_pattern(alphabet: Tuple[CELL_STATE_T, CELL_STATE_T], length=N, r=1.0 / 3.0) -> Sequence[CELL_STATE_T]:
     from random import choice, shuffle
 
     a, b = alphabet
 
-    r = int(r * N)
+    r = int(r * length)
 
-    values = [a] * r + [b] * (N - r)
+    values = [a] * r + [b] * (length - r)
 
-    while len(values) < N:
+    while len(values) < length:
         values.append(choice(alphabet))
 
     shuffle(values)
@@ -97,7 +97,7 @@ CA_CONFIG.neighbourhood = LLLCRRR
 CA_CONFIG.iterations = N
 CA_CONFIG.compute_lambda = False
 
-patterns = [random_string(alphabet=CA_CONFIG.alphabet, length=N) for _ in range(1)]
+patterns = [create_binary_pattern(alphabet=CA_CONFIG.alphabet, length=N) for _ in range(5)]
 patterns.extend(list(map(lambda pattern: invert_pattern(pattern, alphabet=CA_CONFIG.alphabet), patterns)))
 CA_CONFIG.etc = {
     'test_patterns': [(pattern, mode(pattern)) for pattern in patterns]
@@ -106,13 +106,14 @@ CA_CONFIG.etc = {
 NEAT_CONFIG = CPPNNEATConfig()
 
 NEAT_CONFIG.pop_size = 200
-NEAT_CONFIG.generations = 1000
-NEAT_CONFIG.elitism = 1
+NEAT_CONFIG.generations = 100
+NEAT_CONFIG.elitism = 40
 
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
 NEAT_CONFIG.initial_hidden_nodes = 0
 
+FITNESS_F = fitness_f
 PAIR_SELECTION_F = sigma_scaled
 
 if __name__ == '__main__':
@@ -133,7 +134,7 @@ if __name__ == '__main__':
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
-            fitness_f=fitness_f,
+            fitness_f=FITNESS_F,
             pair_selection_f=PAIR_SELECTION_F,
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,
