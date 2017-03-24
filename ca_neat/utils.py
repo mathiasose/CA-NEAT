@@ -1,3 +1,5 @@
+from typing import Sequence, Any
+
 import operator
 import os
 from random import choice, getrandbits, randrange
@@ -72,6 +74,10 @@ def create_state_normalization_rules(states, range=(-1, 1)) -> dict:
     step = (hi - lo) / n_states
 
     return {s: lo + i * step for i, s in enumerate(states)}
+
+
+def is_all_same(Xs: Sequence[Any]) -> bool:
+    return all(x == Xs[0] for x in Xs)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 import logging
 import sqlite3
 from statistics import median
-from typing import Callable, Dict, List, Tuple, Set
+from typing import Callable, Dict, List, Set, Tuple
 from uuid import UUID
 
 import sqlalchemy
@@ -199,7 +199,7 @@ def reproduction(task, results, db_path: str, scenario_id: int, generation_n: in
                  pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
     scenario, alive_species = results
 
-    next_gen_species, nex_gen_genotypes = neat_reproduction(
+    next_gen_species, next_gen_genotypes = neat_reproduction(
         species=alive_species,
         pop_size=scenario.population_size,
         survival_threshold=neat_config.survival_threshold,
@@ -207,8 +207,11 @@ def reproduction(task, results, db_path: str, scenario_id: int, generation_n: in
         pair_selection_f=pair_selection_f,
     )
 
+    print(len(next_gen_genotypes))
+    assert (0.9 * scenario.population_size) <= len(next_gen_genotypes) <= (1.1 * scenario.population_size)
+
     species = speciate(
-        nex_gen_genotypes,
+        next_gen_genotypes,
         compatibility_threshold=neat_config.compatibility_threshold,
         existing_species=next_gen_species
     )
@@ -217,7 +220,7 @@ def reproduction(task, results, db_path: str, scenario_id: int, generation_n: in
         db_path=db_path,
         scenario_id=scenario_id,
         generation=generation_n + 1,
-        genotypes=nex_gen_genotypes,
+        genotypes=next_gen_genotypes,
         fitness_f=fitness_f,
         pair_selection_f=pair_selection_f,
         neat_config=neat_config,
@@ -227,7 +230,7 @@ def reproduction(task, results, db_path: str, scenario_id: int, generation_n: in
     return '{scenario}, generation {generation_n}, {n_individuals} individuals, {n_species} species'.format(
         scenario=scenario,
         generation_n=generation_n,
-        n_individuals=len(nex_gen_genotypes),
+        n_individuals=len(next_gen_genotypes),
         n_species=len(alive_species),
     )
 
