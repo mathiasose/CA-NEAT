@@ -8,7 +8,7 @@ from sqlalchemy.sql.functions import now
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, LargeBinary, String
 from sqlalchemy.types import CHAR, TypeDecorator
-from sqlalchemy_utils.functions.database import database_exists, create_database
+from sqlalchemy_utils.functions.database import create_database, database_exists
 
 
 class GUID(TypeDecorator):

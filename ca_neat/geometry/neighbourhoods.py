@@ -56,9 +56,17 @@ EXTENDED_VON_NEUMANN = tuple(
     if manhattan_distance((x, y), (0, 0)) <= 2
 )
 
-MOORE = tuple(
-    (x, y)
-    for y in range(-1, 2)
-    for x in range(-1, 2)
-    if chebyshev_distance((x, y), (0, 0)) <= 1
-)
+
+def moore(r=1):
+    return tuple(
+        (x, y)
+        for y in range(-r, r + 1)
+        for x in range(-r, r + 1)
+        if chebyshev_distance((x, y), (0, 0)) <= r
+    )
+
+
+MOORE = moore(1)
+
+if __name__ == '__main__':
+    print(*(moore(1)), sep='\n')

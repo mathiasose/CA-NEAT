@@ -1,9 +1,8 @@
-from typing import Sequence, Any
-
 import operator
 import os
 from random import choice, getrandbits, randrange
 from string import ascii_lowercase, ascii_uppercase
+from typing import Any, Sequence
 
 PROJECT_ROOT = os.path.abspath(
     os.path.join(__file__, '..')

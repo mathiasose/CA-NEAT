@@ -1,7 +1,7 @@
 import json
 from uuid import UUID
 
-from neat.genes import NodeGene, ConnectionGene
+from neat.genes import ConnectionGene, NodeGene
 from neat.genome import Genome
 
 from ca_neat.config import CPPNNEATConfig

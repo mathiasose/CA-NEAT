@@ -4,7 +4,7 @@ from io import BytesIO
 from celery.app import shared_task
 from pushbullet import Pushbullet
 
-from ca_neat.run_experiment import get_db
+from ca_neat.database import get_db
 
 try:
     from secrets import PUSHBULLET_API_KEY
