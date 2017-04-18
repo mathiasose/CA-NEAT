@@ -11,7 +11,7 @@ from ca_neat.geometry.cell_grid import CELL_STATE_T
 from ca_neat.geometry.neighbourhoods import LLLCRRR
 from ca_neat.patterns.patterns import ALPHABET_2
 from ca_neat.run_experiment import initialize_scenario
-from ca_neat.utils import random_string, invert_pattern
+from ca_neat.utils import invert_pattern, random_string
 
 N = 49
 

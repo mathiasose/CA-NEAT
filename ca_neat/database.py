@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative.api import declarative_base
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.functions import now
-from sqlalchemy.sql.schema import Column, ForeignKey
+from sqlalchemy.sql.schema import Column, ForeignKey, ForeignKeyConstraint
 from sqlalchemy.sql.sqltypes import DateTime, Float, Integer, LargeBinary, String
 from sqlalchemy.types import CHAR, TypeDecorator
 from sqlalchemy_utils.functions.database import create_database, database_exists
@@ -44,6 +44,7 @@ class GUID(TypeDecorator):
         else:
             return uuid.UUID(value)
 
+
 Base = declarative_base()
 
 
@@ -81,6 +82,23 @@ class Individual(Base):
         )
 
 
+class Innovation(Base):
+    __tablename__ = 'innovations'
+
+    id = Column(Integer, primary_key=True)
+    scenario_id = Column(Integer)
+    generation = Column(Integer)
+    individual_number = Column(Integer)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            [scenario_id, generation, individual_number],
+            [Individual.scenario_id, Individual.generation, Individual.individual_number]
+        ),
+        {}
+    )
+
+
 class Db:
     def __init__(self, path, echo=True):
         self.engine = create_engine(path, echo=echo)
@@ -99,15 +117,6 @@ class Db:
         session.commit()
 
         return scenario
-
-    def save_individual(self, individual, session=None):
-        if session is None:
-            session = self.Session()
-
-        session.add(individual)
-        session.commit()
-
-        return individual
 
     def get_scenarios(self, session=None):
         if session is None:
@@ -135,11 +144,16 @@ class Db:
         return self.get_individuals(scenario_id, session) \
             .filter(Individual.generation == generation)
 
-    def is_scenario_success(self, scenario_id, session=None):
+    def get_innovations(self, scenario_id, session=None):
         if session is None:
             session = self.Session()
 
-        return self.get_individuals(scenario_id, session=session).filter(Individual.fitness >= 1.0).count() >= 1
+        return session.query(Individual).join(Innovation) \
+            .filter(Innovation.scenario_id == scenario_id) \
+            .filter(Innovation.scenario_id == Individual.scenario_id) \
+            .filter(Innovation.generation == Individual.generation) \
+            .filter(Innovation.individual_number == Individual.individual_number) \
+            .values(Individual.genotype)
 
 
 def get_db(path):

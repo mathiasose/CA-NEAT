@@ -7,6 +7,7 @@ app = celery.Celery('celery_app', config_source='celeryconfig', include=(
     'ca_neat.patterns',
     'ca_neat.problems',
     'ca_neat.run_experiment',
+    'ca_neat.run_novelty_experiment',
     'ca_neat.utils',
     'ca_neat.config',
     'ca_neat.report',

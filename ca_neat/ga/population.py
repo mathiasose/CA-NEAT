@@ -107,13 +107,13 @@ def neat_reproduction(species: Iterable[Species], pop_size: int, survival_thresh
             spawn *= 1.1
         else:
             spawn *= 0.9
-        spawn_amounts.append(max(spawn, elitism))
+        spawn_amounts.append(spawn)
 
     total_spawn = sum(spawn_amounts)
     norm = pop_size / total_spawn
     spawn_amounts = [int(round(n * norm)) for n in spawn_amounts]
 
-    new_population = []  # type: List[Genome]
+    new_population: List[Genome] = []
     new_species = []
     for spawn, (s, sfitness) in zip(spawn_amounts, species_fitness):
         if spawn <= 0:
@@ -129,7 +129,7 @@ def neat_reproduction(species: Iterable[Species], pop_size: int, survival_thresh
 
         # Transfer elites to new generation.
         if elitism > 0:
-            elites = old_members[:elitism]
+            elites = old_members[:min(elitism, spawn)]
             new_population.extend(elites)
             spawn -= len(elites)
 
