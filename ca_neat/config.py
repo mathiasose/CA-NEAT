@@ -40,8 +40,9 @@ class CPPNNEATConfig(Config):
     prob_mutate_activation = 0.002
     prob_toggle_link = 0.01
 
-    def __init__(self, **kwargs):
     innovation_threshold = 3.0
+
+    def __init__(self, **kwargs):
         from neat import activation_functions
         from neat.genes import NodeGene, ConnectionGene
         from neat.genome import Genome
