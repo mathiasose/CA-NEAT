@@ -29,13 +29,12 @@ NEAT_CONFIG.stagnation_limit = 15
 
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
-NEAT_CONFIG.initial_hidden_nodes = 0
 
 PAIR_SELECTION_F = sigma_scaled
 FITNESS_F = morphogenesis_fitness_f
 
 if __name__ == '__main__':
-    NOVELTY_DB_PATH = 'postgresql+psycopg2:///generate_border_novelty_2017-04-21T10:09:04.196146'
+    NOVELTY_DB_PATH = 'postgresql+psycopg2:///generate_border_find_innovations_novelty_2017-04-21T19:15:50.286187'
     db = get_db(NOVELTY_DB_PATH)
     session = db.Session()
     values = db.get_innovations(scenario_id=1, session=session)
@@ -46,7 +45,7 @@ if __name__ == '__main__':
         gt.fitness = None
 
     THIS_FILE = os.path.abspath(__file__)
-    PROBLEM_NAME = os.path.split(THIS_FILE)[1].replace('.py', '') + '_novelty'
+    PROBLEM_NAME = os.path.split(THIS_FILE)[1].replace('.py', '')
 
     DB_PATH = 'postgresql+psycopg2:///{}_{}'.format(PROBLEM_NAME, datetime.now().isoformat())
 

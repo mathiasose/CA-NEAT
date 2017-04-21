@@ -19,11 +19,11 @@ CA_CONFIG.etc = {
 
 NEAT_CONFIG = CPPNNEATConfig()
 NEAT_CONFIG.do_speciation = False
-NEAT_CONFIG.compatibility_threshold = 6.0
+NEAT_CONFIG.innovation_threshold = 0.5
 
-NEAT_CONFIG.pop_size = 200
+NEAT_CONFIG.pop_size = 50
 NEAT_CONFIG.generations = 100
-NEAT_CONFIG.elitism = 1
+NEAT_CONFIG.elitism = 0
 NEAT_CONFIG.survival_threshold = 0.2
 NEAT_CONFIG.stagnation_limit = 15
 

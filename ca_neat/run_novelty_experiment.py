@@ -1,13 +1,15 @@
-import random
 from random import choice
 from statistics import median
 from typing import Dict, List, Set, Tuple
 from uuid import UUID
 
 from celery.canvas import chain
+from distance import hamming
 from neat.genome import Genome
+from neat.nn import create_feed_forward_phenotype
 from neat.species import Species
 
+from ca_neat.ca.calculate_lambda import serialize_cppn_rule
 from ca_neat.config import CAConfig, CPPNNEATConfig
 from ca_neat.database import Individual, Innovation, Scenario, get_db
 from ca_neat.ga.population import create_initial_population, neat_reproduction, sort_into_species, speciate
@@ -65,6 +67,7 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
                           ca_config: CAConfig, innovation_archive: List[Genome]) -> None:
     from celery import group, chord
 
+    serialized = {}
     distances = {}
 
     k = 15
@@ -72,16 +75,26 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
     concurrent_tasks = []
     for i, gt in enumerate(genotypes):
         l = []
-        for ot in genotypes + innovation_archive:
-            if ot is gt:
+        for other_gt in genotypes + innovation_archive:
+            if other_gt is gt:
                 continue
 
-            key = tuple(sorted((gt, ot), key=id))
+            key = tuple(sorted((gt, other_gt), key=id))
 
             if key in distances:
                 pass
             else:
-                distances[key] = gt.distance(ot)
+                if gt not in serialized:
+                    pt = create_feed_forward_phenotype(gt)
+                    _, serialized[gt] = serialize_cppn_rule(cppn=pt, ca_config=ca_config)
+
+                if other_gt not in serialized:
+                    pt = create_feed_forward_phenotype(other_gt)
+                    _, serialized[other_gt] = serialize_cppn_rule(cppn=pt, ca_config=ca_config)
+
+                a = serialized[gt]
+                b = serialized[other_gt]
+                distances[key] = hamming(a, b, normalized=True)
 
             l.append(distances[key])
 
