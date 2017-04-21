@@ -13,6 +13,7 @@ class CPPNNEATConfig(Config):
     initial_connection = 'partial'
     connection_fraction = lambda *args: 0.5 * (1 + random.random())
 
+    do_speciation = True
     survival_threshold = 0.2
     stagnation_limit = 15
 

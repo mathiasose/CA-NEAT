@@ -48,7 +48,11 @@ def initialize_scenario(db_path: str, description: str, fitness_f: FITNESS_F_T, 
     if not initial_genotypes:
         initial_genotypes = list(create_initial_population(neat_config))
 
-    speciate(initial_genotypes, compatibility_threshold=neat_config.compatibility_threshold)
+    if neat_config.do_speciation:
+        speciate(initial_genotypes, compatibility_threshold=neat_config.compatibility_threshold)
+    else:
+        for gt in initial_genotypes:
+            gt.species_id = 1
 
     initialize_generation(
         db_path=db_path,
@@ -168,7 +172,7 @@ def reproduction_io(task, db_path: str, scenario_id: int, generation_n: int, nea
     )
 
     stagnation_limit = neat_config.stagnation_limit
-    if (not stagnation_limit) or (generation_n < stagnation_limit):
+    if (not neat_config.do_speciation) or (not stagnation_limit) or (generation_n < stagnation_limit):
         alive_species = species
     else:
         all_individuals = db \
@@ -209,11 +213,15 @@ def reproduction(task, results, db_path: str, scenario_id: int, generation_n: in
         pair_selection_f=pair_selection_f,
     )
 
-    species = speciate(
-        next_gen_genotypes,
-        compatibility_threshold=neat_config.compatibility_threshold,
-        existing_species=next_gen_species
-    )
+    if neat_config.do_speciation:
+        species = speciate(
+            next_gen_genotypes,
+            compatibility_threshold=neat_config.compatibility_threshold,
+            existing_species=next_gen_species
+        )
+    else:
+        for gt in next_gen_genotypes:
+            gt.species_id = 1
 
     initialize_generation(
         db_path=db_path,

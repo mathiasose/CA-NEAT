@@ -18,6 +18,7 @@ CA_CONFIG.etc = {
 }
 
 NEAT_CONFIG = CPPNNEATConfig()
+NEAT_CONFIG.do_speciation = False
 NEAT_CONFIG.compatibility_threshold = 6.0
 
 NEAT_CONFIG.pop_size = 200
