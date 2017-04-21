@@ -1,4 +1,5 @@
 import random
+from random import choice
 from statistics import median
 from typing import Dict, List, Set, Tuple
 from uuid import UUID
@@ -111,7 +112,7 @@ def persist_results(task, results, db_path: str, scenario_id: int, generation_n:
 
     added = 0
     for individual in results:
-        if individual.fitness >= neat_config.innovation_threshold or random.randint(0, 99) == 0:
+        if individual.fitness >= neat_config.innovation_threshold:
             session.add(Innovation(
                 scenario_id=individual.scenario_id,
                 generation=individual.generation,
@@ -119,14 +120,24 @@ def persist_results(task, results, db_path: str, scenario_id: int, generation_n:
             ))
             added += 1
 
+    if added == 0:
+        individual = choice(results)
+        session.add(Innovation(
+            scenario_id=individual.scenario_id,
+            generation=individual.generation,
+            individual_number=individual.individual_number,
+        ))
+
     session.commit()
     session.close()
 
+    print('Generation {} added {} innovations'.format(generation_n, added))
+
     before = neat_config.innovation_threshold
     if added == 0:
-        neat_config.innovation_threshold *= 0.9
-    elif added > 10:
-        neat_config.innovation_threshold *= 1.1
+        neat_config.innovation_threshold *= 0.95
+    elif added > 5:
+        neat_config.innovation_threshold *= 1.05
 
     if neat_config.innovation_threshold != before:
         print('Scenario {} adjusting innovation threshold from {:.2f} to {:.2f}'.format(scenario_id, before,
