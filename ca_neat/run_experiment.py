@@ -1,15 +1,16 @@
-import logging
 import sqlite3
-from statistics import median
+from operator import attrgetter
+from random import choice
+from statistics import median, mean
 from typing import Callable, Dict, List, Optional, Set, Tuple
 from uuid import UUID
 
-import sqlalchemy
+import kombu.exceptions
+import sqlalchemy.exc
 from celery.canvas import chain
 from neat.genome import Genome
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 from neat.species import Species
-from sqlalchemy.exc import OperationalError
 
 from ca_neat.ca.calculate_lambda import calculate_lambda
 from ca_neat.config import CAConfig, CPPNNEATConfig
@@ -27,6 +28,31 @@ AUTO_RETRY = {
     'autoretry_for': (sqlalchemy.exc.OperationalError, sqlite3.OperationalError),
     'retry_kwargs': {'countdown': 5},
 }
+
+
+class SpeciesSet:
+    """
+    Encapsulates data being transferred between tasks
+    """
+
+    def __init__(self, species, scenario):
+        self.species = set(species)
+        self.scenario = scenario
+
+    def __iter__(self):
+        return iter(self.species)
+
+    def __len__(self):
+        return len(self.species)
+
+    def __repr__(self):
+        sizes = [len(s.members) for s in self.species]
+        ages = [s.age for s in self.species]
+        return f'{self.scenario}, ' \
+               f'{len(self)} species, ' \
+               f'mean age {mean(ages):.1f}, ' \
+               f'mean size {mean(sizes):.1f}, ' \
+               f'median size {median(sizes):.1f}'
 
 
 def initialize_scenario(db_path: str, description: str, fitness_f: FITNESS_F_T, pair_selection_f: PAIR_SELECTION_F_T,
@@ -83,7 +109,7 @@ def initialize_generation(db_path: str, scenario_id: int, generation: int, genot
     ) for i, genotype in enumerate(genotypes))
 
     final_task = persist_results.subtask(
-        args=(db_path, scenario_id, generation, fitness_f, pair_selection_f, neat_config, ca_config)
+        args=(db_path, scenario_id, generation, fitness_f, pair_selection_f, neat_config, ca_config),
     )
 
     chord(grouped_tasks, final_task)()
@@ -154,13 +180,14 @@ def check_if_done(task, db_path: str, scenario_id: int, generation_n: int, fitne
 
 
 @app.task(name='reproduction_io', bind=True, **AUTO_RETRY)
-def reproduction_io(task, db_path: str, scenario_id: int, generation_n: int, neat_config: CPPNNEATConfig
-                    ) -> Tuple[Scenario, Set[Species]]:
+def reproduction_io(task, db_path: str, scenario_id: int, generation_n: int, neat_config: CPPNNEATConfig) \
+        -> Tuple[Scenario, Set[Species]]:
     db = get_db(db_path)
     session = db.Session()
 
     scenario = db.get_scenario(scenario_id, session=session)
-    population = db.get_generation(scenario_id, generation_n, session=session)
+    population = db.get_generation(scenario_id, generation_n, session=session) \
+        .with_entities(Individual.genotype)
 
     species = sort_into_species(
         genotypes=(
@@ -172,38 +199,64 @@ def reproduction_io(task, db_path: str, scenario_id: int, generation_n: int, nea
     )
 
     stagnation_limit = neat_config.stagnation_limit
+    stagnation_cutoff = generation_n - stagnation_limit
+
     if (not neat_config.do_speciation) or (not stagnation_limit) or (generation_n < stagnation_limit):
-        alive_species = species
+        alive_species = SpeciesSet(species, scenario)
     else:
         all_individuals = db \
             .get_individuals(scenario_id=scenario_id, session=session) \
-            .filter(generation_n >= generation_n - stagnation_limit)
+            .filter(generation_n >= stagnation_cutoff) \
+            .with_entities(Individual.fitness)
 
         stagnant: Dict[int, bool] = {}
         medians: Dict[int, float] = {}
-        for spec in species:
-            individuals = list(
-                all_individuals \
-                    .filter(Individual.species == UUID(int=spec.ID)) \
-                    .order_by(Individual.generation)
-            )
-            m = median(pluck(individuals, 'fitness'))
-            medians[spec.ID] = m
-            stagnant[spec.ID] = individuals[0].fitness == individuals[-1].fitness
+        for s in species:
+            individuals = all_individuals \
+                .filter(Individual.species == UUID(int=s.ID)) \
+                .order_by(Individual.generation, Individual.fitness)
+
+            medians[s.ID] = median(pluck(individuals, 'fitness'))
+
+            s.age = generation_n - db.get_species_birth_generation(scenario_id, s.ID, session=session)
+
+            if s.age < stagnation_limit:
+                stagnant[s.ID] = False
+            else:
+                first = individuals.first()
+                last = individuals.order_by(-Individual.generation, Individual.fitness).first()
+                stagnant[s.ID] = first.fitness == last.fitness
 
         median_of_medians = median(medians.values())
 
-        alive_species = set(s for s in species if (not stagnant[s.ID]) or (medians[s.ID] >= median_of_medians))
+        for s in species:
+            if medians[s.ID] >= median_of_medians:
+                stagnant[s.ID] = False
+
+        if len(species) > 1 \
+                and not any(stagnant.values()) \
+                and all(s.age > stagnation_limit for s in species):
+            oldest_ID = sorted(species, key=attrgetter('age'))[-1].ID
+            stagnant[oldest_ID] = True
+
+        alive_species = SpeciesSet(
+            species=(s for s in species if not stagnant[s.ID]),
+            scenario=scenario
+        )
+
+        if len(alive_species) < len(species):
+            print(f'Scenario {scenario_id}: removed {len(species) - len(alive_species)} species')
 
     session.close()
 
-    return scenario, alive_species
+    return alive_species
 
 
 @app.task(name='reproduction', bind=True, **AUTO_RETRY)
 def reproduction(task, results, db_path: str, scenario_id: int, generation_n: int, fitness_f: FITNESS_F_T,
                  pair_selection_f: PAIR_SELECTION_F_T, neat_config: CPPNNEATConfig, ca_config: CAConfig) -> str:
-    scenario, alive_species = results
+    alive_species = results.species
+    scenario = results.scenario
 
     next_gen_species, next_gen_genotypes = neat_reproduction(
         species=alive_species,

@@ -144,6 +144,17 @@ class Db:
         return self.get_individuals(scenario_id, session) \
             .filter(Individual.generation == generation)
 
+    def get_species_birth_generation(self, scenario_id, species_id, session=None):
+        if session is None:
+            session = self.Session()
+
+        return self.get_individuals(scenario_id=scenario_id, session=session) \
+            .with_entities(Individual.generation) \
+            .filter(Individual.species == uuid.UUID(int=species_id)) \
+            .order_by(Individual.generation) \
+            .first() \
+            .generation
+
     def get_innovations(self, scenario_id, session=None):
         if session is None:
             session = self.Session()

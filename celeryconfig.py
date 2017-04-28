@@ -18,12 +18,12 @@ task_routes = {
     'reproduction_io_novelty': {'queue': 'db_read'},
 }
 
-result_expires = 60 * 60  # seconds
+result_expires = 15 * 60  # seconds
 
 beat_schedule = {
     'celery.backend_cleanup': {
         'task': 'celery.backend_cleanup',
-        'schedule': 2 * result_expires,
+        'schedule': result_expires // 2,
         'args': (),
     },
 }
