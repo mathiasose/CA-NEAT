@@ -44,8 +44,9 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
         for grid_it in iterate_ca_n_times_or_until_cycle_found(grid, transition_f, iterations):
             yield grid_it
 
-    pattern = [2, *([1] * 9)]
-    firing_state = ca_config.alphabet[-1]
+    N = 10
+    pattern = [2, *([1] * (N - 1))]
+    firing_state = alphabet[-1]
 
     init_grid = FiniteCellGrid1D(
         cell_states=alphabet,
@@ -57,11 +58,20 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
     k = 1
     redistribute = lambda x: x * exp(k * x) / exp(k)
 
-    for it in ca_develop(init_grid, phenotype):
-        s = sum(x == firing_state for x in it.get_whole()) / init_grid.area
+    for i, it in enumerate(ca_develop(init_grid, phenotype)):
+        s = sum(x == firing_state for x in it.get_whole())
 
-        if s > 0.0:
-            return redistribute(s)
+        if s > 0:
+            target_t = (2 * N - 2)
+            #t_score = 1.0 - min(1.0, (abs(target_t - i) / target_t))
+            if i >= target_t:
+                t_score = 1.0
+            else:
+                t_score = (target_t - i) / target_t
+
+            fire_score = (s / init_grid.area)
+            #return 0.75 * fire_score + 0.25 * redistribute(t_score)
+            return fire_score * redistribute(t_score)
     else:
         return 0.0
 
@@ -96,7 +106,7 @@ if __name__ == '__main__':
         gens=NEAT_CONFIG.generations
     )
 
-    for _ in range(25):
+    for _ in range(100):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,
