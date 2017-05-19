@@ -1,12 +1,11 @@
-import os
 from datetime import datetime
 
+import os
 from neat.nn import FeedForwardNetwork
 
 from ca_neat.config import CAConfig, CPPNNEATConfig
 from ca_neat.ga.selection import sigma_scaled
 from ca_neat.geometry.neighbourhoods import LLLCRRR
-from ca_neat.patterns.patterns import ALPHABET_2
 from ca_neat.run_experiment import initialize_scenario
 
 STATES = 8
@@ -22,11 +21,11 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
     from operator import itemgetter
     from neat.nn import FeedForwardNetwork
     from typing import Iterator
-    from ca_neat.geometry.cell_grid import CellGrid1D
+    from ca_neat.geometry.cell_grid import FiniteCellGrid1D
     from ca_neat.geometry.cell_grid import CELL_STATE_T
     from typing import Sequence
 
-    GRID_T = CellGrid1D
+    GRID_T = FiniteCellGrid1D
 
     alphabet = ca_config.alphabet
 
@@ -49,6 +48,7 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
         for grid_it in iterate_ca_n_times_or_until_cycle_found(grid, transition_f, iterations):
             yield grid_it
 
+    grid_size = ca_config.etc['grid_size']
     tests = ca_config.etc['tests']
     points = 0
 
@@ -57,25 +57,33 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
 
         init_grid = GRID_T(
             cell_states=alphabet,
-            values={(x,): 1 for x in range(SIZE // 2, SIZE // 2 + test_n)},
+            x_range=(0, grid_size),
+            values={(x,): alphabet[1] for x in range(grid_size // 2, grid_size // 2 + test_n)},
             neighbourhood=ca_config.neighbourhood,
         )
 
-        *_, last = ca_develop(init_grid, phenotype)
+        *_, second_last, last = ca_develop(init_grid, phenotype)
 
-        s = last.__str__().strip(init_grid.dead_cell)
+        if second_last == last:
+            continue
+
+        s = last.__str__().strip(str(init_grid.dead_cell))
 
         if not s:
             continue
 
         if len(s) == correct and all(x == s[0] for x in s):
+            print(*_, sep='\n')
+            print(last)
             points += 1
+        elif len(s) > test_n:
+            points += 0.1
 
     return points / len(tests)
 
 
 CA_CONFIG = CAConfig()
-CA_CONFIG.alphabet = ALPHABET_2
+CA_CONFIG.alphabet = list(range(STATES))
 CA_CONFIG.neighbourhood = LLLCRRR
 CA_CONFIG.iterations = ITERATIONS
 CA_CONFIG.compute_lambda = False
@@ -106,18 +114,12 @@ if __name__ == '__main__':
 
     DB_PATH = 'postgresql+psycopg2:///' + '{}_{}'.format(PROBLEM_NAME, dt)
 
-    blob = os.path.join(os.path.dirname(THIS_FILE), '{}_{}.json'.format(PROBLEM_NAME, dt))
-    with open(blob, 'w+') as f:
-        import json
-
-        f.write(json.dumps(CA_CONFIG.etc))
-
     DESCRIPTION = '"Square problem"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,
         gens=NEAT_CONFIG.generations
     )
 
-    for _ in range(1):
+    for _ in range(100):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,

@@ -91,6 +91,9 @@ class CellGrid1D(CellGrid):
     origin: COORD_1D_T = (0,)
 
     def get_extreme_coords(self, pad: int = 0) -> Tuple[COORD_1D_T, COORD_1D_T]:
+        if not self.keys():
+            return self.origin, self.origin
+
         x_min = min(self.keys())[0] - pad
         x_max = max(self.keys())[0] + pad
 
@@ -110,7 +113,7 @@ class CellGrid1D(CellGrid):
 
     def __str__(self) -> str:
         return ''.join(
-            '{}'.format(self.get(coord)) for coord in self.iterate_coords()
+            str(self.get(coord)) for coord in self.iterate_coords()
         )
 
     def get_range(self, x_range: Tuple[int, int]) -> Iterator[CELL_STATE_T]:
