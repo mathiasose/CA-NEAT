@@ -2,7 +2,8 @@ from collections import defaultdict
 from operator import itemgetter
 from typing import Callable, Dict, Iterator, Optional, Sequence, Tuple, Union
 
-from numpy.lib.twodim_base import fliplr, flipud, rot90
+from numpy.lib.function_base import rot90
+from numpy.lib.twodim_base import fliplr, flipud
 
 from ca_neat.geometry.neighbourhoods import (COORD_1D_T, COORD_2D_T, COORD_T, LCR, NEIHGBOURHOOD_1D_T,
                                              NEIHGBOURHOOD_2D_T, NEIHGBOURHOOD_T, VON_NEUMANN, radius_1d, radius_2d)
@@ -220,8 +221,11 @@ class FiniteCellGrid1D(CellGrid1D):
 
         return super().get(coord, default=default)
 
-    def get_whole(self):
-        return [self.get((coord,)) for coord in range(*self.x_range)]
+    def yield_values(self):
+        return (self.get((coord,)) for coord in range(*self.x_range))
+
+    def get_whole(self, f=lambda x: x):
+        return list(map(f, self.yield_values()))
 
     def empty_copy(self):
         new = self.__class__(cell_states=self.cell_states, x_range=self.x_range)

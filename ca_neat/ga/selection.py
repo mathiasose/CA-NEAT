@@ -81,7 +81,10 @@ def sigma_scaled(population: List[Genome], **kwargs) -> Iterator[PAIR_T]:
 
     fitnesses = tuple(x.fitness for x in population)
 
-    assert any(f > 0.0 for f in fitnesses)
+    try:
+        assert any(f > 0.0 for f in fitnesses)
+    except AssertionError:
+        return random_choice(population)
 
     sigma = stdev(fitnesses)
 
