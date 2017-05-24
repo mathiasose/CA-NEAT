@@ -12,7 +12,7 @@ from neat.genome import Genome
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 from neat.species import Species
 
-from ca_neat.ca.calculate_lambda import calculate_lambda
+from ca_neat.ca.analysis import calculate_lambda
 from ca_neat.config import CAConfig, CPPNNEATConfig
 from ca_neat.database import Individual, Scenario, get_db
 from ca_neat.ga.population import create_initial_population, neat_reproduction, sort_into_species, speciate
@@ -299,6 +299,11 @@ def reproduction(task, results, db_path: str, scenario_id: int, generation_n: in
 def handle_individual(scenario_id: int, generation: int, individual_number: int, genotype: Genome,
                       fitness_f: FITNESS_F_T, ca_config: CAConfig) -> Individual:
     λ = None
+    phenotype = None
+
+    if (genotype.fitness is None) or ca_config.compute_lambda:
+        phenotype = create_feed_forward_phenotype(genotype)
+
     if genotype.fitness is None:
         phenotype = create_feed_forward_phenotype(genotype)
 
@@ -309,8 +314,12 @@ def handle_individual(scenario_id: int, generation: int, individual_number: int,
 
         assert 0.0 <= genotype.fitness <= 1.0
 
-        if ca_config.compute_lambda:
+    if ca_config.compute_lambda:
+        try:
             λ = calculate_lambda(cppn=phenotype, ca_config=ca_config)
+        except OverflowError:
+            genotype.fitness = 0.0
+            λ = 0.0
 
     individual = Individual(
         scenario_id=scenario_id,

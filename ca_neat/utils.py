@@ -23,9 +23,13 @@ def random_string(alphabet, length, **kwargs):
     return ''.join(choice(alphabet) for _ in range(length))
 
 
-def invert_pattern(pattern, alphabet):
+def invert_value(value, alphabet):
     a, b = alphabet
-    return list(map(lambda value: (a if value == b else b), pattern))
+    return a if value == b else b
+
+
+def invert_pattern(pattern, alphabet):
+    return list(map(lambda x: invert_value(x, alphabet), pattern))
 
 
 def splice(a, b, **kwargs):

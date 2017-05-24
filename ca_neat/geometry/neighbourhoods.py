@@ -39,8 +39,12 @@ def radius_2d(neighbourhood: NEIHGBOURHOOD_2D_T) -> int:
     )
 
 
-LCR = ((-1,), (0,), (1,))
-LLLCRRR = ((-3,), (-2,), (-1,), (0,), (1,), (2,), (3,))
+def one_d_neighborhood(r):
+    return tuple((x,) for x in range(-r, r + 1))
+
+
+LCR = one_d_neighborhood(1)
+LLLCRRR = one_d_neighborhood(3)
 
 VON_NEUMANN = tuple(
     (x, y)
@@ -69,4 +73,5 @@ def moore(r=1):
 MOORE = moore(1)
 
 if __name__ == '__main__':
-    print(*(moore(1)), sep='\n')
+    assert one_d_neighborhood(1) == LCR == ((-1,), (0,), (1,))
+    assert one_d_neighborhood(3) == LLLCRRR == ((-3,), (-2,), (-1,), (0,), (1,), (2,), (3,))

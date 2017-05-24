@@ -9,7 +9,7 @@ from neat.genome import Genome
 from neat.nn import create_feed_forward_phenotype
 from neat.species import Species
 
-from ca_neat.ca.calculate_lambda import serialize_cppn_rule
+from ca_neat.ca.analysis import serialize_cppn_rule
 from ca_neat.config import CAConfig, CPPNNEATConfig
 from ca_neat.database import Individual, Innovation, Scenario, get_db
 from ca_neat.ga.population import create_initial_population, neat_reproduction, sort_into_species, speciate
