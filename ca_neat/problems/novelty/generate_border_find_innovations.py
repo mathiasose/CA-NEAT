@@ -11,32 +11,26 @@ from ca_neat.run_novelty_experiment import initialize_scenario
 CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = ALPHABET_2
 CA_CONFIG.neighbourhood = VON_NEUMANN
-CA_CONFIG.iterations = 30
-CA_CONFIG.etc = {
-    'target_pattern': BORDER,
-    'seed': SEED_6X6,
-}
 
 NEAT_CONFIG = CPPNNEATConfig()
 NEAT_CONFIG.do_speciation = False
 NEAT_CONFIG.innovation_threshold = 0.5
 
 NEAT_CONFIG.pop_size = 50
-NEAT_CONFIG.generations = 100
+NEAT_CONFIG.generations = 1
 NEAT_CONFIG.elitism = 0
-NEAT_CONFIG.survival_threshold = 0.2
-NEAT_CONFIG.stagnation_limit = 15
+
+NEAT_CONFIG.survival_threshold = 0.5
 
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
-NEAT_CONFIG.initial_hidden_nodes = 0
 
 PAIR_SELECTION_F = sigma_scaled
 FITNESS_F = morphogenesis_fitness_f
 
 if __name__ == '__main__':
     THIS_FILE = os.path.abspath(__file__)
-    PROBLEM_NAME = os.path.split(THIS_FILE)[1].replace('.py', '') + '_novelty'
+    PROBLEM_NAME = os.path.split(THIS_FILE)[1].replace('.py', '')
 
     DB_PATH = 'postgresql+psycopg2:///{}_{}'.format(PROBLEM_NAME, datetime.now().isoformat())
 

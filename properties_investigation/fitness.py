@@ -21,7 +21,7 @@ if __name__ == '__main__':
         2: 'D',
         3: 'C',
         4: 'B',
-        5: 'A',
+        5: 'T',
     }
     maxes = defaultdict(list)
     means = defaultdict(list)

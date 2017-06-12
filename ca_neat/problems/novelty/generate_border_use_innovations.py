@@ -22,7 +22,7 @@ CA_CONFIG.etc = {
 NEAT_CONFIG = CPPNNEATConfig()
 
 NEAT_CONFIG.pop_size = 200
-NEAT_CONFIG.generations = 100
+NEAT_CONFIG.generations = 1
 NEAT_CONFIG.elitism = 1
 NEAT_CONFIG.survival_threshold = 0.2
 NEAT_CONFIG.stagnation_limit = 15
@@ -34,15 +34,19 @@ PAIR_SELECTION_F = sigma_scaled
 FITNESS_F = morphogenesis_fitness_f
 
 if __name__ == '__main__':
-    NOVELTY_DB_PATH = 'postgresql+psycopg2:///generate_border_find_innovations_novelty_2017-04-21T19:15:50.286187'
+    NOVELTY_DB_PATH = 'postgresql+psycopg2:///generate_border_find_innovations_2017-04-21T20:14:55.212484'
     db = get_db(NOVELTY_DB_PATH)
     session = db.Session()
     values = db.get_innovations(scenario_id=1, session=session)
     gts = [deserialize_gt(x[0], NEAT_CONFIG) for x in values]
     session.close()
 
+    assert gts
+
     for gt in gts:
         gt.fitness = None
+
+    print('Loaded {} genotypes from innovation archive'.format(len(gts)))
 
     THIS_FILE = os.path.abspath(__file__)
     PROBLEM_NAME = os.path.split(THIS_FILE)[1].replace('.py', '')
@@ -54,7 +58,8 @@ if __name__ == '__main__':
         gens=NEAT_CONFIG.generations
     )
 
-    for _ in range(1):
+    for i in range(1):
+        print(i, datetime.now().time().isoformat(), end='\t')
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,

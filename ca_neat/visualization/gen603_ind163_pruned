@@ -1,0 +1,90 @@
+digraph {
+	node [fillcolor=white fontsize=9 height=0.2 shape=circle style=filled width=0.2]
+		subgraph {
+			"0_in" [label=N style=dotted]
+			0 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"0_in" -> 0 [color=blue]
+		}
+		subgraph {
+			"1_in" [label=W style=dotted]
+			1 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"1_in" -> 1 [color=blue]
+		}
+		subgraph {
+			"2_in" [label=p style=dotted]
+			2 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"2_in" -> 2 [color=blue]
+		}
+		subgraph {
+			"3_in" [label=E style=dotted]
+			3 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"3_in" -> 3 [color=blue]
+		}
+		subgraph {
+			"4_in" [label=S style=dotted]
+			4 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"4_in" -> 4 [color=blue]
+		}
+		subgraph {
+			"5_in" [label=X style=dotted]
+			5 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"5_in" -> 5 [color=blue]
+		}
+		subgraph {
+			"6_in" [label=Y style=dotted]
+			6 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"6_in" -> 6 [color=blue]
+		}
+		subgraph {
+			"7_out" [label=" " style=dotted]
+			7 [label="hat
+bias: -3.0" fillcolor=lightblue style=filled]
+				7 -> "7_out" [color=blue]
+		}
+		subgraph {
+			"8_out" [label="■" style=dotted]
+			8 [label="clamped
+bias: 0.9" fillcolor=lightblue style=filled]
+				8 -> "8_out" [color=blue]
+		}
+		subgraph {
+			"9_out" [label="□" style=dotted]
+			9 [label="exp
+bias: 0.2" fillcolor=lightblue style=filled]
+				9 -> "9_out" [color=blue]
+		}
+		subgraph {
+			"10_out" [label="▨" style=dotted]
+			10 [label="cube
+bias: -7.8" fillcolor=lightblue style=filled]
+				10 -> "10_out" [color=blue]
+		}
+		42 [label="sin
+bias: 3.2"]
+		48 [label="σ
+bias: 0.6"]
+		36 [label="hat
+bias: -0.9"]
+		52 [label="inv
+bias: 2.8"]
+			48 -> 7 [label=-2.3 color=red style=solid width=0.5508459546979052]
+			36 -> 7 [label=1.7 color=green style=solid width=0.4323348784217331]
+			6 -> 52 [label=2.1 color=green style=solid width=0.5102974148725018]
+			2 -> 42 [label=-1.7 color=red style=solid width=0.4499183334713349]
+			52 -> 10 [label=-1.1 color=red style=solid width=0.3130475239727646]
+			42 -> 7 [label=-3.8 color=red style=solid width=0.8527191721102191]
+			6 -> 9 [label=-0.3 color=red style=solid width=0.15224966219524]
+			3 -> 9 [label=0.4 color=green style=solid width=0.18144796252915385]
+			3 -> 7 [label=0.8 color=green style=solid width=0.26361306768502446]
+			3 -> 10 [label=8.7 color=green style=solid width=1.8454264366102544]
+			5 -> 8 [label=0.9 color=green style=solid width=0.2844597577631137]
+			5 -> 10 [label=-5.5 color=red style=solid width=1.2051726074358835]
+			10 -> 7 [label=3.7 color=green style=solid width=0.8498025061369266]
+}

@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     from ca_neat.problems.replicate_tricolor import CA_CONFIG
 
-    problem_name, db_file = ('replicate_tricolor', '2016-11-21 17:29:01.273816.db')
+    problem_name, db_file = ('replicate_tricolor', '2016-11-21 17:29:01.273816.DB')
 
     db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
     db = get_db(db_path)

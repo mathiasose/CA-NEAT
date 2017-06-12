@@ -96,7 +96,7 @@ CA_CONFIG.etc = {
 NEAT_CONFIG = CPPNNEATConfig()
 
 NEAT_CONFIG.pop_size = 200
-NEAT_CONFIG.generations = 10
+NEAT_CONFIG.generations = 100
 NEAT_CONFIG.elitism = 5
 
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)

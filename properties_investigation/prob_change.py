@@ -106,5 +106,5 @@ if __name__ == '__main__':
     ax2.set_ylabel('Number of nodes')
 
     plt.ion()
-    plt.title('Change in behavior after mutation, correlated with number of hidden nodes and number of unreachable nodes')
+    plt.title('Change in k after mutation, correlated with number of hidden nodes and number of unreachable nodes')
     plt.show(block=True)

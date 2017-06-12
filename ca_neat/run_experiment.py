@@ -6,6 +6,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 from uuid import UUID
 
 import kombu.exceptions
+import psycopg2
 import sqlalchemy.exc
 from celery.canvas import chain
 from neat.genome import Genome
@@ -25,7 +26,7 @@ from celery_app import app
 FITNESS_F_T = Callable[[FeedForwardNetwork, CAConfig], float]
 
 AUTO_RETRY = {
-    'autoretry_for': (sqlalchemy.exc.OperationalError, sqlite3.OperationalError),
+    'autoretry_for': (sqlalchemy.exc.OperationalError, sqlite3.OperationalError, psycopg2.OperationalError),
     'retry_kwargs': {'countdown': 5},
 }
 
@@ -90,6 +91,7 @@ def initialize_scenario(db_path: str, description: str, fitness_f: FITNESS_F_T, 
         neat_config=neat_config,
         ca_config=ca_config,
     )
+    session.close()
 
     return scenario
 

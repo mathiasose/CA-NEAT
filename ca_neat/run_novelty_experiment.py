@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, uniform
 from statistics import median
 from typing import Dict, List, Set, Tuple
 from uuid import UUID
@@ -58,6 +58,7 @@ def initialize_scenario(db_path: str, description: str, fitness_f: FITNESS_F_T, 
         ca_config=ca_config,
         innovation_archive=[],
     )
+    session.close()
 
     return scenario
 
@@ -148,9 +149,9 @@ def persist_results(task, results, db_path: str, scenario_id: int, generation_n:
 
     before = neat_config.innovation_threshold
     if added == 0:
-        neat_config.innovation_threshold *= 0.95
+        neat_config.innovation_threshold *= uniform(0.95, 1.0)
     elif added > 5:
-        neat_config.innovation_threshold *= 1.05
+        neat_config.innovation_threshold *= uniform(1.0, 1.05)
 
     if neat_config.innovation_threshold != before:
         print('Scenario {} adjusting innovation threshold from {:.2f} to {:.2f}'.format(scenario_id, before,

@@ -18,9 +18,11 @@ def symbol(name):
 
 
 def draw_net(genome: Genome, view=False, filename=None, show_disabled=False, prune_unused=True, fmt='svg',
-             in_labels=None, out_labels=None):
+             in_labels=None, out_labels=None, title=''):
     if not in_labels:
         in_labels = {}
+    elif isinstance(in_labels, list):
+        in_labels = dict(enumerate(in_labels))
     if not out_labels:
         out_labels = {}
 
@@ -60,6 +62,9 @@ def draw_net(genome: Genome, view=False, filename=None, show_disabled=False, pru
         used_node_ids = set(genome.node_genes.keys())
 
     dot = graphviz.Digraph(format=fmt, node_attr=REGULAR_NODE_STYLE)
+
+    if title:
+        dot.attr('graph', label=title, labelloc='t')
 
     for ng_id, ng in genome.node_genes.items():
         node_id = str(ng_id)

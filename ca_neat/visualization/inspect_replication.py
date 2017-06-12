@@ -24,7 +24,7 @@ if __name__ == '__main__':
     from ca_neat.problems.replicate_mosaic import CA_CONFIG
 
     problem_name = 'replicate_mosaic'
-    db_file = '2016-11-21 01:36:38.266342.db'
+    db_file = '2016-11-21 01:36:38.266342.DB'
     scenario_id = 34
     individual_n = 31
     generation_n = 0
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
 
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(grid_iterations), interval=1000, blit=True)
-    file_descriptor = '{}_{}'.format(problem_name, db_file.replace('.db', ''))
+    file_descriptor = '{}_{}'.format(problem_name, db_file.replace('.DB', ''))
     output_path = '{}_gen{}_ind{}'.format(file_descriptor, generation_n, individual_n)
     # anim.save(output_path + '.gif', writer='imagemagick', fps=1)
     plt.show()

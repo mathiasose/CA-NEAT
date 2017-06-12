@@ -1,7 +1,7 @@
 from ca_neat.config import CAConfig
 from ca_neat.database import get_db, Individual
 from ca_neat.ga.serialize import deserialize_gt
-from ca_neat.problems.synchronization import CA_CONFIG, NEAT_CONFIG
+from ca_neat.problems.fss import CA_CONFIG, NEAT_CONFIG
 from ca_neat.ca.iterate import iterate_ca_n_times_or_until_cycle_found
 from ca_neat.utils import create_state_normalization_rules
 from operator import itemgetter
@@ -50,14 +50,17 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig):
 
     for it in ca_develop(init_grid, phenotype):
         whole = it.get_whole()
-        print(whole)
+        print(*whole, sep='\t')
 
         if firing_state in whole:
             break
 
 
 if __name__ == '__main__':
-    DB_PATH = 'postgresql+psycopg2:///synchronization_2017-04-02T22:23:29.295715'
+    #DB_PATH = 'postgresql+psycopg2:///synchronization_2017-04-05T21:11:15.864495'
+    #DB_PATH = 'postgresql+psycopg2:///synchronization_2017-04-06T14:50:00.533955'
+    #DB_PATH = 'postgresql+psycopg2:///synchronization_2017-04-08T14:25:38.380316'
+    DB_PATH = 'postgresql+psycopg2:///synchronization_2017-04-08T21:52:08.875799'
     db = get_db(DB_PATH)
 
     session = db.Session()

@@ -6,8 +6,7 @@ task_serializer = 'dill'
 result_serializer = 'dill'
 accept_content = ['dill']
 
-result_backend = 'db+sqlite:///results.sqlite'
-result_persistent = False
+result_backend = 'redis://'
 
 task_routes = {
     'persist_results': {'queue': 'db_write'},

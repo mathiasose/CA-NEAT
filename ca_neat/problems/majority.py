@@ -14,6 +14,7 @@ from ca_neat.run_experiment import initialize_scenario
 from ca_neat.utils import invert_pattern, random_string
 
 N = 49
+C = 1.0 / 3.0
 
 
 def create_binary_pattern(alphabet: Tuple[CELL_STATE_T, CELL_STATE_T], length=N, r=1.0 / 3.0) -> Sequence[CELL_STATE_T]:
@@ -94,10 +95,10 @@ def fitness_f(phenotype: FeedForwardNetwork, ca_config: CAConfig) -> float:
 CA_CONFIG = CAConfig()
 CA_CONFIG.alphabet = ALPHABET_2
 CA_CONFIG.neighbourhood = LLLCRRR
-CA_CONFIG.iterations = N
+CA_CONFIG.iterations = 2*N
 CA_CONFIG.compute_lambda = False
 
-patterns = [create_binary_pattern(alphabet=CA_CONFIG.alphabet, length=N) for _ in range(5)]
+patterns = [create_binary_pattern(alphabet=CA_CONFIG.alphabet, length=N, r=C) for _ in range(5)]
 patterns.extend(list(map(lambda pattern: invert_pattern(pattern, alphabet=CA_CONFIG.alphabet), patterns)))
 CA_CONFIG.etc = {
     'test_patterns': [(pattern, mode(pattern)) for pattern in patterns]
@@ -107,7 +108,7 @@ NEAT_CONFIG = CPPNNEATConfig()
 
 NEAT_CONFIG.pop_size = 200
 NEAT_CONFIG.generations = 100
-NEAT_CONFIG.elitism = 40
+NEAT_CONFIG.elitism = 5
 
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood)
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
@@ -119,11 +120,16 @@ PAIR_SELECTION_F = sigma_scaled
 if __name__ == '__main__':
     THIS_FILE = os.path.abspath(__file__)
     PROBLEM_NAME = os.path.split(THIS_FILE)[1].replace('.py', '')
-    RESULTS_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'results', PROBLEM_NAME))
-    if not os.path.exists(RESULTS_DIR):
-        os.makedirs(RESULTS_DIR)
 
-    DB_PATH = 'postgresql+psycopg2:///' + '{}_{}'.format(PROBLEM_NAME, datetime.now().isoformat())
+    dt = datetime.now().isoformat()
+
+    DB_PATH = 'postgresql+psycopg2:///' + '{}_{}'.format(PROBLEM_NAME, dt)
+
+    blob = os.path.join(os.path.dirname(THIS_FILE), '{}_{}.json'.format(PROBLEM_NAME, dt))
+    with open(blob, 'w+') as f:
+        import json
+
+        f.write(json.dumps(CA_CONFIG.etc))
 
     DESCRIPTION = '"Majority problem"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,
@@ -139,3 +145,48 @@ if __name__ == '__main__':
             neat_config=NEAT_CONFIG,
             ca_config=CA_CONFIG,
         )
+
+"""
+    DB_PATH = 'postgresql+psycopg2:///majority_2017-03-24T15:48:10.659623'
+        N=149
+        r=1/3
+        patterns = 5*2
+        e=40
+        g=100
+
+    DB_PATH = 'postgresql+psycopg2:///majority_2017-03-27T14:54:14.480804'
+        N=149
+        r=0.5
+        patterns = 5*2
+        e=40
+        g=100
+
+    majority_2017-04-09T03:00:41.882869
+        N=49
+        r=1/3
+        patterns = 5*2
+        e=5
+        g=100
+
+    majority_2017-04-09T21:23:37.986163
+        N=149
+        r=1/3
+        patterns = 5*2
+        e=5
+        g=100
+
+    postgresql+psycopg2:///majority_2017-04-17T12:56:25.176657
+        N=149
+        r=1/2
+        patterns = 5*2
+        e=5
+        g=100
+
+new extinction rules:
+    postgresql+psycopg2:///majority_2017-05-02T17:42:29.143748
+        N=49
+        r=1/3
+        patterns = 5*2
+        e=5
+        g=100
+"""

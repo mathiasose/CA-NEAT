@@ -61,8 +61,8 @@ if __name__ == '__main__':
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
 
-    DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format('2016-11-23 13:51:24.771958'))
-    #DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
+    DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.DB'.format('2016-11-23 13:51:24.771958'))
+    #DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.DB'.format(datetime.now()))
 
     DESCRIPTION = '"Border morphogenesis"\npopulation size: {pop}\ngenerations: {gens}'.format(
         pop=NEAT_CONFIG.pop_size,

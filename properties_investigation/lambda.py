@@ -21,7 +21,7 @@ if __name__ == '__main__':
         2: 'D',
         3: 'C',
         4: 'B',
-        5: 'A',
+        5: 'T',
     }
     means = {}
 
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         fig2 = plt.figure()
 
         lambdalabels = [
-            f'λ = {a}' if a == b else f'{a} < λ <= {b}' for a, b in bins
+            f'λ = {a}' if a == b else f'{a} < λ <= {k}' for a, b in bins
             ]
         lambdalabels[-2] = '{} < λ < {}'.format(*bins[-2])
         for color, label in reversed(list(zip(palette, lambdalabels))):

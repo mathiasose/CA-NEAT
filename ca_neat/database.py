@@ -100,9 +100,9 @@ class Innovation(Base):
 
 
 class Db:
-    def __init__(self, path, echo=True):
+    def __init__(self, path, create_if_nonexistent=True, echo=True):
         self.engine = create_engine(path, echo=echo)
-        if not database_exists(self.engine.url):
+        if create_if_nonexistent and not database_exists(self.engine.url):
             create_database(self.engine.url)
 
         Base.metadata.create_all(self.engine)
@@ -167,5 +167,5 @@ class Db:
             .values(Individual.genotype)
 
 
-def get_db(path):
-    return Db(path, echo=False)
+def get_db(path, **kwargs):
+    return Db(path, echo=False, **kwargs)

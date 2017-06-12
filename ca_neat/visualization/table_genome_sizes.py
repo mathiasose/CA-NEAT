@@ -21,14 +21,14 @@ if __name__ == '__main__':
 
     table = []
     for problem_name, db_file in [
-        ('generate_mosaic', '2016-12-05 15:01:33.095161.db'),
-        ('generate_border', '2016-11-23 13:51:24.771958.db'),
-        ('generate_tricolor', '2016-12-04 18:09:12.299816.db'),
-        ('generate_swiss_flag', '2016-11-18 21:48:15.168123.db'),
-        ('replicate_mosaic', '2016-11-21 01:36:38.266342.db'),
-        ('replicate_swiss_flag', '2016-11-16 12:39:05.554163.db'),
-        ('replicate_tricolor', '2016-11-21 17:29:01.273816.db'),
-        #('replicate_norwegian_flag', '2016-11-25 14:55:53.727034.db'),
+        ('generate_mosaic', '2016-12-05 15:01:33.095161.DB'),
+        ('generate_border', '2016-11-23 13:51:24.771958.DB'),
+        ('generate_tricolor', '2016-12-04 18:09:12.299816.DB'),
+        ('generate_swiss_flag', '2016-11-18 21:48:15.168123.DB'),
+        ('replicate_mosaic', '2016-11-21 01:36:38.266342.DB'),
+        ('replicate_swiss_flag', '2016-11-16 12:39:05.554163.DB'),
+        ('replicate_tricolor', '2016-11-21 17:29:01.273816.DB'),
+        #('replicate_norwegian_flag', '2016-11-25 14:55:53.727034.DB'),
     ]:
         print(problem_name)
         db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))

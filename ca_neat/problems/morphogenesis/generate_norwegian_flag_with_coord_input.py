@@ -22,37 +22,12 @@ CA_CONFIG.compute_lambda = False
 NEAT_CONFIG = CPPNNEATConfig()
 
 NEAT_CONFIG.pop_size = 200
-NEAT_CONFIG.generations = 700
+NEAT_CONFIG.generations = 100
 NEAT_CONFIG.elitism = 1
-NEAT_CONFIG.survival_threshold = 0.2
-NEAT_CONFIG.stagnation_limit = 15
-
-NEAT_CONFIG.compatibility_threshold = 3.0
-NEAT_CONFIG.excess_coefficient = 1.0
-NEAT_CONFIG.disjoint_coefficient = 1.0
-NEAT_CONFIG.weight_coefficient = 0.5
 
 NEAT_CONFIG.input_nodes = len(CA_CONFIG.neighbourhood) + 2
 NEAT_CONFIG.output_nodes = len(CA_CONFIG.alphabet)
 NEAT_CONFIG.initial_hidden_nodes = 0
-
-NEAT_CONFIG.max_weight = 30
-NEAT_CONFIG.min_weight = -30
-NEAT_CONFIG.weight_stdev = 1.0
-
-NEAT_CONFIG.prob_add_conn = 0.5
-NEAT_CONFIG.prob_add_node = 0.5
-NEAT_CONFIG.prob_delete_conn = 0.25
-NEAT_CONFIG.prob_delete_node = 0.25
-NEAT_CONFIG.prob_mutate_bias = 0.8
-NEAT_CONFIG.bias_mutation_power = 0.5
-NEAT_CONFIG.prob_mutate_response = 0.8
-NEAT_CONFIG.response_mutation_power = 0.5
-NEAT_CONFIG.prob_mutate_weight = 0.8
-NEAT_CONFIG.prob_replace_weight = 0.1
-NEAT_CONFIG.weight_mutation_power = 0.5
-NEAT_CONFIG.prob_mutate_activation = 0.002
-NEAT_CONFIG.prob_toggle_link = 0.01
 
 PAIR_SELECTION_F = sigma_scaled
 
@@ -141,7 +116,7 @@ if __name__ == '__main__':
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
 
-    #DB_PATH = 'sqlite:///' + os.path.join(RESULTS_DIR, '{}.db'.format(datetime.now()))
+    # DB_PATH = 'postgresql+psycopg2:///generate_norwegian_flag_with_coord_input_2017-03-09T16:37:14.488425'
     DB_PATH = 'postgresql+psycopg2:///' + '{}_{}'.format(PROBLEM_NAME, datetime.now().isoformat())
 
     DESCRIPTION = '"Norwegian flag morphogenesis with XY inputs"\npopulation size: {pop}\ngenerations: {gens}'.format(
@@ -149,7 +124,7 @@ if __name__ == '__main__':
         gens=NEAT_CONFIG.generations
     )
 
-    for _ in range(5):
+    for _ in range(100):
         initialize_scenario(
             db_path=DB_PATH,
             description=DESCRIPTION,

@@ -8,11 +8,18 @@ from ca_neat.database import get_db
 
 try:
     from secrets import PUSHBULLET_API_KEY
-
-    PB = Pushbullet(PUSHBULLET_API_KEY)
 except ImportError:
     PUSHBULLET_API_KEY = None
+
+if PUSHBULLET_API_KEY:
+    PB = Pushbullet(PUSHBULLET_API_KEY)
+else:
     PB = None
+
+AUTO_RETRY = {
+    'autoretry_for': (Exception,),
+    'retry_kwargs': {'countdown': 30},
+}
 
 
 def push_image(stream, file_name):
@@ -26,7 +33,7 @@ def push_image(stream, file_name):
     return push
 
 
-@shared_task(name='send_results_via_pushbullet')
+@shared_task(name='send_results_via_pushbullet', **AUTO_RETRY)
 def send_results_via_pushbullet(db_path: str, scenario_id: int):
     if PB is None:
         return
@@ -37,11 +44,11 @@ def send_results_via_pushbullet(db_path: str, scenario_id: int):
     with BytesIO() as stream:
         plt.savefig(stream, format='png')
         stream.seek(0)
-        timestamp = os.path.basename(db_path).replace('.db', '')
+        timestamp = os.path.basename(db_path).replace('.DB', '')
         push_image(stream, '{}.png'.format(timestamp))
 
 
-@shared_task(name='send_message_via_pushbullet')
+@shared_task(name='send_message_via_pushbullet', **AUTO_RETRY)
 def send_message_via_pushbullet(title: str, body: str):
     if PB is None:
         return

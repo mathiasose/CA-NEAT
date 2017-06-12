@@ -43,7 +43,7 @@ def plot_generations_until_optimal(db: Db):
 
 if __name__ == '__main__':
     problem_dir = 'generate_border/'
-    db_file = '2016-11-23 02:58:19.655974.db'
+    db_file = '2016-11-23 02:58:19.655974.DB'
 
     THIS_FILE = os.path.abspath(__file__)
     RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))

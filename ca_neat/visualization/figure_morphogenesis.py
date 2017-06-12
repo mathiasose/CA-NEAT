@@ -1,37 +1,40 @@
 import os
 from operator import itemgetter
-from typing import T, Tuple
+from typing import T, Tuple, Sequence, Iterator
 
 import seaborn
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, rcParams
 from neat.nn import FeedForwardNetwork, create_feed_forward_phenotype
 
-from ca_neat.ca.iterate import iterate_ca_n_times_or_until_cycle_found
+from ca_neat.ca.iterate import iterate_ca_n_times_or_until_cycle_found, iterate_ca_once_with_coord_inputs
 from ca_neat.database import Individual, get_db
-from ca_neat.geometry.cell_grid import ToroidalCellGrid2D, get_rotational_hash
+from ca_neat.ga.serialize import deserialize_gt
+from ca_neat.geometry.cell_grid import ToroidalCellGrid2D, get_rotational_hash, CELL_STATE_T
+from ca_neat.geometry.neighbourhoods import radius_2d
 from ca_neat.utils import PROJECT_ROOT, create_state_normalization_rules
 from ca_neat.visualization.colors import colormap, norm
+
+rcParams['savefig.format'] = 'pdf'
 
 seen = set()
 
 if __name__ == '__main__':
     seaborn.set(style='white')
 
-    from ca_neat.problems.generate_tricolor import CA_CONFIG
+    from ca_neat.problems.novelty.generate_swiss_use_innovations import CA_CONFIG, NEAT_CONFIG
 
-    problem_name, db_file = ('generate_tricolor', '2016-12-04 18:09:12.299816.db')
-
-    db_path = 'sqlite:///{}'.format(os.path.join(PROJECT_ROOT, 'problems', 'results', problem_name, db_file))
-    db = get_db(db_path)
-    session = db.Session()
+    DB_PATH = 'postgresql+psycopg2:///generate_swiss_use_innovations_2017-06-11T14:41:05.471556'
+    DB = get_db(DB_PATH)
+    session = DB.Session()
 
     count = 0
-    q = session.query(Individual).filter(Individual.fitness >= 1.0) \
-        .order_by(Individual.scenario_id, Individual.generation, Individual.individual_number)
-    print(q.count(), 'total')
-    for individual in q:
+    q = session.query(Individual) \
+        .order_by(-Individual.fitness)
 
-        genotype = individual.genotype
+    print(q.count(), 'total')
+
+    for individual in q[:10]:
+        genotype = deserialize_gt(individual.genotype, NEAT_CONFIG)
         phenotype = create_feed_forward_phenotype(genotype)
         alphabet = CA_CONFIG.alphabet
         iterations = CA_CONFIG.iterations
@@ -50,10 +53,13 @@ if __name__ == '__main__':
         initial_grid.add_pattern_at_coord(pattern, (0, 0))
 
         state_normalization_rules = create_state_normalization_rules(states=alphabet)
+        r = radius_2d(neighbourhood)
+        coord_normalization_rules = create_state_normalization_rules(
+            states=range(0 - r, max(pattern_h, pattern_w) + r + 1))
 
 
-        def ca_develop(network: FeedForwardNetwork):
-            def transition_f(inputs_discrete_values: Tuple[T]) -> T:
+        def ca_develop(network: FeedForwardNetwork) -> Iterator[ToroidalCellGrid2D]:
+            def transition_f(inputs_discrete_values: Sequence[CELL_STATE_T]) -> CELL_STATE_T:
                 if all((x == initial_grid.dead_cell) for x in inputs_discrete_values):
                     return initial_grid.dead_cell
 
@@ -82,7 +88,10 @@ if __name__ == '__main__':
 
         print('show', individual.scenario_id, individual.generation, individual.individual_number)
         fig = plt.figure()
-        plt.title('\t'.join(map(str, [individual.scenario_id, individual.generation, individual.individual_number])))
+        fig.canvas.set_window_title(
+            'run {} gen {} ind {}'.format(individual.scenario_id, individual.generation, individual.individual_number))
+        plt.axis('off')
+        # plt.title('\t'.join(map(str, [individual.scenario_id, individual.generation, individual.individual_number])))
 
         (l, r), (t, b) = x_range, y_range
         extent = (l, r, b, t)
@@ -91,8 +100,8 @@ if __name__ == '__main__':
         for i, iteration in enumerate(grid_iterations[:30], 1):
             n = len(grid_iterations)
             ax = fig.add_subplot(n // 5 + 1, 5, i)
-            plt.axis('off')
             ax.set_title(asdf.get(iteration.__hash__(), i - 1))
+            plt.axis('off')
             im = plt.imshow(
                 iteration.get_enumerated_rectangle(x_range=x_range, y_range=y_range),
                 extent=extent,
@@ -104,3 +113,5 @@ if __name__ == '__main__':
 
     plt.show()
     print(count, 'unique')
+
+"""16 2 182"""

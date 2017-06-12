@@ -1,0 +1,76 @@
+Description
+===========
+
+Keywords: Cellular Automata, Evolutionary Computation, Artificial Development, Artificial Evolution, Artificial Life, Self-Replication, NEAT, CPPN, neuroevolution, complexificaiton.
+
+This project aims to study the properties of Cellular Automata (CA) developmental machines.
+Cellular Automata have been studied by von Neumann in the 1940s,
+in order to design self-replicating artificial systems inspired to biology.
+In 1970 Conway proposed the "game of life" based on CAs.
+Our main interest with CA lies in the fact that they are a model of natural computation:
+massive parallelism, local interactions, entangled memory and processing,
+they show self-organization and self-regulation properties and many other characteristics
+that resemble living systems. CA can be considered as discrete dynamic systems and approached as
+networks of sparsely connected units (cells). Such networks can be analyzed and evaluated
+using the same methods for Boolean Networks and Random Boolean Networks (RBN).
+This opens the possibility to generate and visualize attractor basins and the trajectories
+from initial state to attractors, which may represent the system behavior.
+
+In this project, CPPN evolved with NEAT are used as novel CA transition functions.
+This is a natural continuation of the semester specialisation project. This project may include:
+
+- CPPN input with only neighbours value (local interaction),
+  information on physical and environmental characteristics (x,y coordinates, distance from a specific point,
+  concentration of chemicals in the environment, etc.)
+
+- Morphogenesis and replication are among the investigated problems.
+  Other problems might be considered, e.g. replication loops, morphing of structures, development in 3D,
+  computational problems (e.g. square of numbers).
+
+- Evolution might be given control over larger neighbourhood configurations.
+
+- Investigation with novelty search.
+
+
+Plan (preliminary)
+==================
+
+Analysis
+    Figure out CA-NEAT measures similar to λ, M, μ
+    Relevant considerations:
+        - structure of a CPPN
+            - https://en.wikipedia.org/wiki/Directed_acyclic_graph
+            - https://en.wikipedia.org/wiki/Polytree
+            - number of nodes and connections
+            - depth: path lengths, shortest, longest, avg, number of possible paths
+            - used activation functions
+        - Attractors and trajectory lengths
+        - Wolfram classes
+
+Experiments
+    Dynamic neighbourhood size
+        - Norwegian flag morphogenesis
+        - Replication problems
+
+    Environment input
+        - Border morphogenesis with XY
+        - Norwegian flag morphogenesis with XY
+        - Input for replication?
+
+    Square computation
+        - Try parameters Bidlo used
+            - 100 cells
+            - 8 states
+            - Neigbourhood size ?
+            - Square number 2 - 9
+
+    Firing squad synchronization
+        - Different/dynamic neighbourhood sizes
+        - Different number of states
+        - Try dynamic neighbourhood
+
+    Majority problem
+        - Try different/dynamic neighbourhood sizes
+
+    Novelty search
+        - Border morphogenesis is a good candidate (as discussed in prev paper)

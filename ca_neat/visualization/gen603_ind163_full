@@ -1,0 +1,270 @@
+digraph {
+	node [fillcolor=white fontsize=9 height=0.2 shape=circle style=filled width=0.2]
+		subgraph {
+			"0_in" [label=N style=dotted]
+			0 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"0_in" -> 0 [color=blue]
+		}
+		subgraph {
+			"1_in" [label=W style=dotted]
+			1 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"1_in" -> 1 [color=blue]
+		}
+		subgraph {
+			"2_in" [label=p style=dotted]
+			2 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"2_in" -> 2 [color=blue]
+		}
+		subgraph {
+			"3_in" [label=E style=dotted]
+			3 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"3_in" -> 3 [color=blue]
+		}
+		subgraph {
+			"4_in" [label=S style=dotted]
+			4 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"4_in" -> 4 [color=blue]
+		}
+		subgraph {
+			"5_in" [label=X style=dotted]
+			5 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"5_in" -> 5 [color=blue]
+		}
+		subgraph {
+			"6_in" [label=Y style=dotted]
+			6 [label="σ
+bias: 0.0" fillcolor=lightgray shape=box style=filled]
+				"6_in" -> 6 [color=blue]
+		}
+		subgraph {
+			"7_out" [label=" " style=dotted]
+			7 [label="hat
+bias: -3.0" fillcolor=lightblue style=filled]
+				7 -> "7_out" [color=blue]
+		}
+		subgraph {
+			"8_out" [label="■" style=dotted]
+			8 [label="clamped
+bias: 0.9" fillcolor=lightblue style=filled]
+				8 -> "8_out" [color=blue]
+		}
+		subgraph {
+			"9_out" [label="□" style=dotted]
+			9 [label="exp
+bias: 0.2" fillcolor=lightblue style=filled]
+				9 -> "9_out" [color=blue]
+		}
+		subgraph {
+			"10_out" [label="▨" style=dotted]
+			10 [label="cube
+bias: -7.8" fillcolor=lightblue style=filled]
+				10 -> "10_out" [color=blue]
+		}
+		16 [label="abs
+bias: -5.4"]
+		18 [label="log
+bias: -7.9"]
+		20 [label="square
+bias: 2.7"]
+		21 [label="exp
+bias: -3.1"]
+		22 [label="abs
+bias: 0.8"]
+		23 [label="relu
+bias: 2.6"]
+		14 [label="hat
+bias: 1.9"]
+		17 [label="cube
+bias: 4.2"]
+		19 [label="cube
+bias: -3.5"]
+		25 [label="gauss
+bias: -4.7"]
+		29 [label="clamped
+bias: -9.3"]
+		24 [label="σ
+bias: -4.8"]
+		30 [label="hat
+bias: -7.5"]
+		28 [label="sin
+bias: -6.9"]
+		12 [label="σ
+bias: -2.6"]
+		13 [label="square
+bias: 0.1"]
+		32 [label="sin
+bias: -0.6"]
+		37 [label="inv
+bias: -2.0"]
+		38 [label="cube
+bias: -5.2"]
+		39 [label="sin
+bias: -7.3"]
+		40 [label="abs
+bias: 9.8"]
+		15 [label="sin
+bias: -3.1"]
+		27 [label="tanh
+bias: -0.3"]
+		11 [label="identity
+bias: 4.9"]
+		42 [label="sin
+bias: 3.2"]
+		43 [label="inv
+bias: -2.0"]
+		44 [label="relu
+bias: -3.9"]
+		26 [label="gauss
+bias: -2.7"]
+		45 [label="clamped
+bias: 1.4"]
+		33 [label="hat
+bias: -1.9"]
+		34 [label="identity
+bias: -1.1"]
+		46 [label="clamped
+bias: 3.4"]
+		41 [label="clamped
+bias: -3.9"]
+		47 [label="σ
+bias: 3.0"]
+		31 [label="gauss
+bias: -0.1"]
+		48 [label="σ
+bias: 0.6"]
+		49 [label="identity
+bias: -3.1"]
+		50 [label="tanh
+bias: 2.5"]
+		36 [label="hat
+bias: -0.9"]
+		51 [label="sin
+bias: -0.3"]
+		52 [label="inv
+bias: 2.8"]
+		53 [label="tanh
+bias: -0.4"]
+		54 [label="clamped
+bias: -2.5"]
+		55 [label="log
+bias: 0.9"]
+			32 -> 29 [label=0.9 color=green style=dotted width=0.2898229055247058]
+			5 -> 37 [label=-1.7 color=red style=solid width=0.4420634784539873]
+			23 -> 13 [label=0.8 color=green style=solid width=0.26872299070024763]
+			0 -> 38 [label=1.3 color=green style=solid width=0.3659350352098998]
+			38 -> 22 [label=1.8 color=green style=dotted width=0.4639890991969653]
+			12 -> 9 [label=-2.4 color=red style=dotted width=0.5764127118752581]
+			22 -> 32 [label=-0.4 color=red style=dotted width=0.17044934191187555]
+			39 -> 29 [label=0.7 color=green style=dotted width=0.2373298966210122]
+			24 -> 40 [label=3.0 color=green style=solid width=0.707336877096115]
+			3 -> 15 [label=0.6 color=green style=dotted width=0.2106235254171064]
+			15 -> 29 [label=-0.7 color=red style=solid width=0.23775586045272704]
+			32 -> 16 [label=0.3 color=green style=dotted width=0.15334469857124366]
+			0 -> 27 [label=0.9 color=green style=solid width=0.2748758310162262]
+			4 -> 29 [label=1.8 color=green style=dotted width=0.45939189013865644]
+			11 -> 16 [label=-0.3 color=red style=dotted width=0.16626023541414245]
+			30 -> 39 [label=-0.3 color=red style=dotted width=0.16944197826281449]
+			2 -> 42 [label=-1.7 color=red style=solid width=0.4499183334713349]
+			42 -> 7 [label=-3.8 color=red style=solid width=0.8527191721102191]
+			25 -> 22 [label=-0.3 color=red style=solid width=0.16344027868507]
+			38 -> 21 [label=0.5 color=green style=dotted width=0.19320891261687517]
+			43 -> 16 [label=-3.3 color=red style=solid width=0.7505801861805772]
+			38 -> 44 [label=-1.3 color=red style=dotted width=0.35240059623143805]
+			3 -> 25 [label=-0.2 color=red style=dotted width=0.14406374044099762]
+			6 -> 26 [label=0.8 color=green style=solid width=0.26510926618949127]
+			26 -> 10 [label=-5.8 color=red style=dotted width=1.252447473437666]
+			21 -> 45 [label=0.3 color=green style=solid width=0.16175341336349475]
+			45 -> 14 [label=-1.8 color=red style=dotted width=0.46690215082628106]
+			7 -> 33 [label=-0.8 color=red style=dotted width=0.2648072128948028]
+			33 -> 20 [label=1.7 color=green style=dotted width=0.44196787457576914]
+			19 -> 34 [label=1.2 color=green style=solid width=0.34791590875613554]
+			34 -> 18 [label=4.1 color=green style=dotted width=0.9225102823062483]
+			40 -> 33 [label=3.6 color=green style=dotted width=0.817953405712111]
+			23 -> 46 [label=-1.0 color=red style=solid width=0.29605658849170113]
+			46 -> 13 [label=0.0 color=green style=solid width=0.1036304957678558]
+			41 -> 20 [label=0.7 color=green style=dotted width=0.24006036602354267]
+			0 -> 47 [label=-1.8 color=red style=dotted width=0.4693335012896892]
+			47 -> 22 [label=0.9 color=green style=solid width=0.27431030263831435]
+			19 -> 31 [label=-0.1 color=red style=dotted width=0.12276963997483592]
+			31 -> 18 [label=0.4 color=green style=dotted width=0.1777381237869221]
+			48 -> 7 [label=-2.3 color=red style=solid width=0.5508459546979052]
+			27 -> 24 [label=-1.0 color=red style=dotted width=0.3030045331205307]
+			41 -> 34 [label=-1.2 color=red style=solid width=0.3347837865483683]
+			19 -> 49 [label=0.0 color=green style=solid width=0.10198804692483826]
+			49 -> 18 [label=-0.6 color=red style=solid width=0.2168536542307007]
+			42 -> 50 [label=-0.9 color=red style=solid width=0.28784084045688463]
+			50 -> 7 [label=0.5 color=green style=dotted width=0.19048711791253353]
+			29 -> 36 [label=-1.1 color=red style=dotted width=0.3254505945613182]
+			36 -> 7 [label=1.7 color=green style=solid width=0.4323348784217331]
+			42 -> 42 [label=1.2 color=green style=dotted width=0.33544634305656895]
+			38 -> 51 [label=0.9 color=green style=solid width=0.28693966183808406]
+			51 -> 44 [label=0.3 color=green style=dotted width=0.1569415934215424]
+			27 -> 9 [label=-2.7 color=red style=dotted width=0.6321976719928548]
+			6 -> 52 [label=2.1 color=green style=solid width=0.5102974148725018]
+			52 -> 10 [label=-1.1 color=red style=solid width=0.3130475239727646]
+			21 -> 47 [label=-1.1 color=red style=dotted width=0.32973597999067034]
+			20 -> 53 [label=1.2 color=green style=solid width=0.340402709620216]
+			53 -> 7 [label=-0.5 color=red style=dotted width=0.19098668715559847]
+			30 -> 54 [label=0.1 color=green style=solid width=0.1280848161370473]
+			54 -> 29 [label=-0.3 color=red style=dotted width=0.1659987847176914]
+			51 -> 15 [label=-2.1 color=red style=dotted width=0.527296785927035]
+			7 -> 55 [label=1.2 color=green style=solid width=0.33831594831173617]
+			55 -> 20 [label=-0.3 color=red style=solid width=0.16675139750085669]
+			10 -> 23 [label=-2.0 color=red style=solid width=0.4969961893236303]
+			3 -> 54 [label=2.7 color=green style=dotted width=0.6348285261539559]
+			17 -> 22 [label=-0.6 color=red style=dotted width=0.21511808407198518]
+			6 -> 8 [label=-1.0 color=red style=dotted width=0.30523154671729436]
+			6 -> 9 [label=-0.3 color=red style=solid width=0.15224966219524]
+			3 -> 9 [label=0.4 color=green style=solid width=0.18144796252915385]
+			3 -> 10 [label=8.7 color=green style=solid width=1.8454264366102544]
+			1 -> 7 [label=-1.8 color=red style=dotted width=0.46921731580994896]
+			5 -> 8 [label=0.9 color=green style=solid width=0.2844597577631137]
+			2 -> 7 [label=-0.0 color=red style=dotted width=0.10100534129040799]
+			5 -> 10 [label=-5.5 color=red style=solid width=1.2051726074358835]
+			0 -> 8 [label=2.5 color=green style=dotted width=0.5904778203343228]
+			10 -> 7 [label=3.7 color=green style=solid width=0.8498025061369266]
+			1 -> 8 [label=0.7 color=green style=dotted width=0.248207890645565]
+			0 -> 9 [label=1.0 color=green style=dotted width=0.3081208530797154]
+			20 -> 7 [label=3.1 color=green style=dotted width=0.7106226404634542]
+			22 -> 7 [label=0.2 color=green style=dotted width=0.1308240348530597]
+			4 -> 8 [label=-2.4 color=red style=dotted width=0.5731045802685353]
+			7 -> 20 [label=-1.5 color=red style=dotted width=0.3932300578834542]
+			0 -> 17 [label=-0.4 color=red style=solid width=0.1844785664606237]
+			18 -> 20 [label=-1.9 color=red style=solid width=0.4712147559053166]
+			7 -> 19 [label=0.6 color=green style=dotted width=0.21519109788818597]
+			19 -> 16 [label=2.6 color=green style=dotted width=0.6114501779628114]
+			0 -> 20 [label=0.9 color=green style=dotted width=0.289059101588362]
+			10 -> 16 [label=-2.4 color=red style=dotted width=0.5744440196600963]
+			17 -> 21 [label=-0.5 color=red style=solid width=0.19340363940901364]
+			4 -> 25 [label=-0.7 color=red style=dotted width=0.2301002067982237]
+			19 -> 18 [label=3.2 color=green style=solid width=0.7376093167263763]
+			6 -> 10 [label=0.3 color=green style=dotted width=0.15490456518960893]
+			29 -> 7 [label=3.4 color=green style=dotted width=0.7709082580160886]
+			21 -> 14 [label=-0.1 color=red style=dotted width=0.12342841525202965]
+			0 -> 24 [label=-0.8 color=red style=dotted width=0.2630506885907783]
+			24 -> 20 [label=2.7 color=green style=dotted width=0.6374440015955679]
+			21 -> 25 [label=2.4 color=green style=solid width=0.5846715169304234]
+			10 -> 30 [label=1.2 color=green style=solid width=0.3425115528213068]
+			30 -> 29 [label=0.8 color=green style=dotted width=0.26791608830415403]
+			16 -> 17 [label=-2.0 color=red style=solid width=0.5033008023907809]
+			3 -> 29 [label=-2.5 color=red style=dotted width=0.5942676261067328]
+			4 -> 20 [label=1.4 color=green style=dotted width=0.37985079321757886]
+			28 -> 19 [label=-0.9 color=red style=dotted width=0.27916309445020315]
+			29 -> 29 [label=-1.3 color=red style=dotted width=0.3676073385315072]
+			0 -> 22 [label=-1.8 color=red style=solid width=0.46485216405598806]
+			3 -> 7 [label=0.8 color=green style=solid width=0.26361306768502446]
+			10 -> 12 [label=-3.2 color=red style=dotted width=0.7346029874163903]
+			24 -> 13 [label=-0.6 color=red style=dotted width=0.2138646853747484]
+			13 -> 20 [label=0.4 color=green style=solid width=0.1835464734437337]
+			6 -> 18 [label=-0.9 color=red style=dotted width=0.27664998031506016]
+			5 -> 32 [label=-2.4 color=red style=dotted width=0.5704358507013005]
+			32 -> 14 [label=-1.3 color=red style=solid width=0.36987824386011603]
+			8 -> 13 [label=2.0 color=green style=solid width=0.5062356130230546]
+			30 -> 19 [label=1.6 color=green style=solid width=0.42384843465787525]
+}

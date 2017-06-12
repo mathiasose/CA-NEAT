@@ -26,8 +26,8 @@ def find_nodes_connected_to_output(genome: Genome):
             a = connection.in_node_id
             b = connection.out_node_id
 
-            # if b not in can_reach_from_input and a in can_reach_from_input:
-            #     can_reach_from_input.add(b)
+            # if k not in can_reach_from_input and a in can_reach_from_input:
+            #     can_reach_from_input.add(k)
             #     finished = False
 
             if a not in can_reach_from_output and b in can_reach_from_output:
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         2: 'D',
         3: 'C',
         4: 'B',
-        5: 'A',
+        5: 'T',
     }
 
     fig = plt.figure()

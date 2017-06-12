@@ -4,6 +4,7 @@ from statistics import mean, median
 import matplotlib.pyplot as plt
 import seaborn
 from sqlalchemy.sql.functions import func
+from tqdm._tqdm import tqdm
 
 from ca_neat.database import Db, Individual, Scenario, get_db
 from ca_neat.utils import PROJECT_ROOT
@@ -11,36 +12,41 @@ from ca_neat.utils import PROJECT_ROOT
 seaborn.set_style('white')
 
 
-def plot(db: Db, show=True, n=None):
+def plot(db: Db, show=True, generations=None):
     session = db.Session()
-    scenarios = db.get_scenarios(session=session)
 
-    assert scenarios.count()
+    Xs = session.query(Individual) \
+        .filter(Individual.fitness >= 1.0) \
+        .order_by(Individual.scenario_id, Individual.generation) \
+        .distinct(Individual.scenario_id)
 
-    scenarios_fitnesses = []
-    for scenario in scenarios:
-        progression = session \
-            .query(Individual, func.max(Individual.fitness)) \
-            .filter(Individual.scenario_id == scenario.id) \
-            .order_by(Individual.generation) \
-            .group_by(Individual.generation) \
-            .order_by(func.max(Individual.fitness).desc())
-        print(scenario.id, progression.count(), any(f >= 1.0 for _, f in progression))
-        scenarios_fitnesses.append([score for _, score in progression])
+    gens = [i.generation for i in Xs]
 
-    n = n or max(map(len, scenarios_fitnesses))
-    for sf in scenarios_fitnesses:
-        while len(sf) < n:
+    print(sorted(gens))
+    print(len(gens))
+
+    scenarios = list(db.get_scenarios(session=session))
+    generations = generations or scenarios[0].generations or max(gens)
+
+    assert scenarios
+
+    scenarios = list(filter(lambda s: db.get_individuals(s.id, session).count(), scenarios))
+
+    scenarios_fitnesses = {scenario.id: [] for scenario in scenarios}
+    for scenario in tqdm(scenarios):
+        for g in range(generations):
+            max_f = session.query(Individual, func.max(Individual.fitness)) \
+                .filter(Individual.scenario_id == scenario.id, Individual.generation == g) \
+                .value(func.max(Individual.fitness))
+
+            if not max_f:
+                break
+
+            scenarios_fitnesses[scenario.id].append(max_f)
+
+    for k, sf in scenarios_fitnesses.items():
+        while len(sf) < generations:
             sf.append(sf[-1])
-
-    q = session.query(Scenario, Individual.generation) \
-        .join(Individual) \
-        .filter(Individual.fitness == 1.0) \
-        .group_by(Scenario.id) \
-        .distinct(Scenario.id) \
-        .order_by(Individual.generation)
-
-    gens = [r[1] for r in q.all()]
 
     if show:
         plt.ion()
@@ -54,21 +60,27 @@ def plot(db: Db, show=True, n=None):
     ax2.set_zorder(100)
     ax1.patch.set_visible(False)
 
-    ax1.set_color_cycle(seaborn.color_palette('hls', n_colors=scenarios.count()))
-    ax1.axis([0, n, -0.1, 1.1])
+    ax1.set_color_cycle(seaborn.color_palette('hls', n_colors=len(scenarios)))
+    ax1.axis([0, generations, 0.0, 1.1])
     ax1.set_ylabel('Fitness')
 
     ax2.set_ylabel('Finished runs')
-    ax2.set_ylim([0, int(scenarios.count() * 1.1)])
+    ax2.set_ylim([0, int(len(scenarios) * 1.1)])
 
-    ax1.plot([mean(gen) for gen in zip(*scenarios_fitnesses)], 'r', label='mean', zorder=210)
-    ax1.plot([median(gen) for gen in zip(*scenarios_fitnesses)], 'b--', label='median', zorder=211)
+    means = [mean([scenarios_fitnesses[s.id][g] for s in scenarios]) for g in range(generations)]
+    medians = [median([scenarios_fitnesses[s.id][g] for s in scenarios]) for g in range(generations)]
 
-    ax2.hist(gens, bins=n, range=(0, n), cumulative=True, color=['pink'], zorder=110, label='Finished runs')
+    ax1.plot(means, 'r', label='mean', zorder=210)
+    ax1.plot(medians, 'k--', label='median', zorder=211)
+
+    ax2.hist(gens, bins=generations, range=(0, generations), cumulative=True, color=['pink'], zorder=110,
+             label='Finished runs', histtype='stepfilled')
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     l = plt.legend(lines1 + lines2, labels1 + labels2, frameon=True, loc='lower right')
     l.set_zorder(300)
+
+    session.close()
 
     if show:
         plt.show(block=True)
@@ -80,13 +92,11 @@ def plot(db: Db, show=True, n=None):
 
 
 if __name__ == '__main__':
-    problem_dir, db_file = ('generate_norwegian_flag_with_coord_input', '2017-01-30 09:30:09.020771.db')
+    #DB_PATH = 'postgresql+psycopg2:///generate_border_with_coord_input_2017-05-25T14:11:14.401192'
+    #DB_PATH = 'postgresql+psycopg2:///synchronization_2017-05-06T17:00:23.012278'
+    DB_PATH = 'postgresql+psycopg2:///generate_norwegian_flag_with_coord_input_2017-03-09T16:37:14.48'
+    # DB_PATH = 'postgresql+psycopg2:///generate_norwegian_flag_with_coord_input_2017-05-25T15:20:52.64'
 
-    THIS_FILE = os.path.abspath(__file__)
-    RESULTS_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, 'problems', 'results'))
-    file = os.path.join(RESULTS_DIR, problem_dir, db_file)
-    db_path = 'sqlite:///{}'.format(file)
-
-    print(db_path)
-    db = get_db(db_path)
+    print(DB_PATH)
+    db = get_db(DB_PATH)
     plot(db, show=True)
