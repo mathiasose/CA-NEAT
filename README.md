@@ -6,6 +6,5 @@ Part of my M.Sc. thesis project at NTNU fall 2016 - spring 2017.
 Based on [neat-python](https://github.com/CodeReclaimers/neat-python/).
 Requires Python 3.
 
-## TODO
-- Pick a license.
-- Write something resembling a documentation.
+## Thesis
+http://hdl.handle.net/11250/2459261
